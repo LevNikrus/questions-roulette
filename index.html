@@ -108,8 +108,20 @@
             color: #888;
         }
 
-        .hidden {
-            display: none;
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
@@ -130,7 +142,7 @@
             <div class="btn-group">
                 <button id="btn-her">Её вопросы</button>
                 <button id="btn-his">Твои вопросы</button>
-                <button id="btn-gpt">Вопросы от ChatGPT</button>
+                <button id="btn-gpt">Общие вопросы</button>
             </div>
 
             <div class="counter">
@@ -145,31 +157,35 @@
                 <h4>Её вопросы (видит только она)</h4>
                 <textarea id="her-questions" placeholder="Каждый вопрос с новой строки"></textarea>
                 <button id="save-her">Сохранить её вопросы</button>
+                <span id="her-status" style="margin-left: 10px;"></span>
             </div>
 
             <div style="margin-top: 20px;">
                 <h4>Твои вопросы (видишь только ты)</h4>
                 <textarea id="his-questions" placeholder="Каждый вопрос с новой строки"></textarea>
                 <button id="save-his">Сохранить твои вопросы</button>
+                <span id="his-status" style="margin-left: 10px;"></span>
             </div>
 
             <div style="margin-top: 20px;">
                 <h4>Общие вопросы (видят оба)</h4>
                 <textarea id="common-questions" placeholder="Каждый вопрос с новой строки"></textarea>
                 <button id="save-common">Сохранить общие вопросы</button>
+                <span id="common-status" style="margin-left: 10px;"></span>
             </div>
 
             <div style="margin-top: 20px;">
-                <button id="load-default">Загрузить вопросы по умолчанию</button>
+                <button id="sync-google">Синхронизировать с Google Таблицей</button>
+                <span id="sync-status"></span>
             </div>
         </div>
     </div>
 
     <script>
-        // Конфигурация Google Sheets
-        const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID'; // Замените на ID вашей таблицы
-        const API_KEY = 'YOUR_GOOGLE_API_KEY'; // Замените на ваш API ключ
-        const SHEET_NAME = 'Questions'; // Название листа в таблице
+        // Ваши настройки Google Sheets
+        const SHEET_ID = '1wVcvPztE_Wfjw8yhDcTMKvc_35JhPx5Goj0wXvTBhPg';
+        const API_KEY = 'AIzaSyBHaRk3ji6hHN6jHdLiIKdv1VjiK0WE6qw';
+        const SHEET_NAME = 'Questions';
 
         // Элементы интерфейса
         const questionElement = document.getElementById('question');
@@ -200,7 +216,7 @@
                     } else {
                         document.getElementById('play-mode').style.display = 'none';
                         document.getElementById('admin-mode').style.display = 'block';
-                        // Заполняем текстовые поля при открытии редактора
+                        // Заполняем текстовые поля
                         document.getElementById('her-questions').value = questions.her.join('\n');
                         document.getElementById('his-questions').value = questions.his.join('\n');
                         document.getElementById('common-questions').value = questions.common.join('\n');
@@ -224,56 +240,72 @@
             // Обработчики сохранения
             document.getElementById('save-her').addEventListener('click', () => {
                 saveQuestions('her', document.getElementById('her-questions').value);
+                document.getElementById('her-status').textContent = '✓ Сохранено';
+                setTimeout(() => document.getElementById('her-status').textContent = '', 2000);
             });
 
             document.getElementById('save-his').addEventListener('click', () => {
                 saveQuestions('his', document.getElementById('his-questions').value);
+                document.getElementById('his-status').textContent = '✓ Сохранено';
+                setTimeout(() => document.getElementById('his-status').textContent = '', 2000);
             });
 
             document.getElementById('save-common').addEventListener('click', () => {
                 saveQuestions('common', document.getElementById('common-questions').value);
+                document.getElementById('common-status').textContent = '✓ Сохранено';
+                setTimeout(() => document.getElementById('common-status').textContent = '', 2000);
             });
 
-            document.getElementById('load-default').addEventListener('click', () => {
-                loadDefaultQuestions();
+            document.getElementById('sync-google').addEventListener('click', async () => {
+                const btn = document.getElementById('sync-google');
+                const status = document.getElementById('sync-status');
+                btn.disabled = true;
+                status.innerHTML = '<span class="loading"></span> Синхронизация...';
+
+                try {
+                    await loadQuestionsFromGoogleSheets();
+                    status.textContent = '✓ Синхронизировано';
+
+                    // Обновляем поля редактора
+                    if (document.getElementById('admin-mode').style.display !== 'none') {
+                        document.getElementById('her-questions').value = questions.her.join('\n');
+                        document.getElementById('his-questions').value = questions.his.join('\n');
+                        document.getElementById('common-questions').value = questions.common.join('\n');
+                    }
+                } catch (e) {
+                    status.textContent = '✗ Ошибка синхронизации';
+                    console.error(e);
+                } finally {
+                    setTimeout(() => status.textContent = '', 2000);
+                    btn.disabled = false;
+                }
             });
 
             // Первоначальная загрузка вопросов из Google Sheets
             try {
                 await loadQuestionsFromGoogleSheets();
             } catch (e) {
-                console.error('Ошибка загрузки из Google Sheets:', e);
-                // Используем сохраненные локально вопросы
+                console.log('Используем локальные вопросы:', e);
             }
         });
 
         // Загрузка вопросов из Google Sheets
         async function loadQuestionsFromGoogleSheets() {
-            if (!SHEET_ID || SHEET_ID === 'YOUR_GOOGLE_SHEET_ID') {
-                console.log('Google Sheets не настроен, используем локальные вопросы');
-                return;
-            }
-
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
 
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
+            const response = await fetch(url);
+            const data = await response.json();
 
-                if (data.values && data.values.length > 0) {
-                    // Предполагаем, что в таблице 3 колонки: Её вопросы, Твои вопросы, Общие вопросы
-                    questions.her = data.values.map(row => row[0]).filter(q => q);
-                    questions.his = data.values.map(row => row[1]).filter(q => q);
-                    questions.common = data.values.map(row => row[2]).filter(q => q);
+            if (data.values && data.values.length > 0) {
+                // Предполагаем формат: [ [Её вопросы, Твои вопросы, Общие вопросы], [...] ]
+                questions.her = data.values.map(row => row[0]?.trim()).filter(q => q);
+                questions.his = data.values.map(row => row[1]?.trim()).filter(q => q);
+                questions.common = data.values.map(row => row[2]?.trim()).filter(q => q);
 
-                    // Сохраняем в localStorage
-                    saveAllQuestionsToLocalStorage();
+                // Сохраняем в localStorage
+                saveAllQuestionsToLocalStorage();
 
-                    console.log('Вопросы успешно загружены из Google Sheets');
-                }
-            } catch (error) {
-                console.error('Ошибка при загрузке из Google Sheets:', error);
-                throw error;
+                console.log('Вопросы успешно загружены из Google Sheets');
             }
         }
 
@@ -283,40 +315,12 @@
             questions.his = JSON.parse(localStorage.getItem('hisQuestions')) || [];
             questions.common = JSON.parse(localStorage.getItem('commonQuestions')) || [];
 
-            // Если вопросы пусты, загружаем вопросы по умолчанию
+            // Если вопросы пусты, добавляем примеры
             if (questions.her.length === 0 && questions.his.length === 0 && questions.common.length === 0) {
-                loadDefaultQuestions();
-            }
-        }
-
-        // Загрузка вопросов по умолчанию
-        function loadDefaultQuestions() {
-            questions.her = [
-                "Какой момент в наших отношениях тебе запомнился больше всего?",
-                "Что тебе во мне нравится, о чем я могу не догадываться?"
-            ];
-
-            questions.his = [
-                "Что бы ты хотела, чтобы я делал чаще?",
-                "Какой наш совместный ритуал тебе нравится больше всего?"
-            ];
-
-            questions.common = [
-                "Если бы у нас был идеальный день, как бы он прошел?",
-                "Какое качество в партнере ты ценишь больше всего?",
-                "Что делает отношения по-настоящему крепкими?",
-                "Какой совместный опыт вас сблизил больше всего?",
-                "Что тебя вдохновляет в наших отношениях?"
-            ];
-
-            // Сохраняем
-            saveAllQuestionsToLocalStorage();
-
-            // Обновляем текстовые поля в редакторе
-            if (document.getElementById('admin-mode').style.display !== 'none') {
-                document.getElementById('her-questions').value = questions.her.join('\n');
-                document.getElementById('his-questions').value = questions.his.join('\n');
-                document.getElementById('common-questions').value = questions.common.join('\n');
+                questions.her = ["Какой момент в наших отношениях тебе запомнился больше всего?"];
+                questions.his = ["Что бы ты хотела, чтобы я делал чаще?"];
+                questions.common = ["Если бы у нас был идеальный день, как бы он прошел?"];
+                saveAllQuestionsToLocalStorage();
             }
         }
 
@@ -329,9 +333,8 @@
 
         // Сохранение вопросов определенного типа
         function saveQuestions(type, text) {
-            questions[type] = text.split('\n').filter(q => q.trim());
+            questions[type] = text.split('\n').map(q => q.trim()).filter(q => q);
             localStorage.setItem(`${type}Questions`, JSON.stringify(questions[type]));
-            alert('Вопросы сохранены!');
         }
 
         // Показать случайный вопрос
