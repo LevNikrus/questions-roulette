@@ -6,13 +6,34 @@ const questions = [
     "Что для тебя значит искренняя близость?",
     "Если бы ты мог вернуться в один момент жизни — какой бы ты выбрал?",
     "Что тебя всегда вдохновляет, даже когда все сложно?",
-    "Опиши идеальный вечер, и кто в нем рядом."
+    "Опиши идеальный вечер, и кто в нем рядом.",
+    "Какая песня вызывает у тебя самые сильные эмоции?",
+    "Что ты больше всего ценишь во мне?",
+    "Какой самый неожиданный комплимент ты получал(а)?",
+    "Какое твое качество тебе самому(ой) нравится больше всего?",
+    "Что ты хотел(а) бы изменить в своем подходе к отношениям?",
+    "Какой момент в наших отношениях ты вспоминаешь с особой теплотой?",
+    "Что делает тебя по-настоящему счастливым(ой)?",
+    "Какой твой самый нелепый страх?",
+    "Какое место в мире тебе кажется самым уютным?",
+    "Какой поступок ты совершил(а) и до сих пор им гордишься?",
+    "Что тебе нравится в себе, но что другие люди могут не замечать?",
+    "Какой совет ты бы дал(а) своему 15-летнему «я»?"
 ];
 
 document.getElementById('spin').addEventListener('click', () => {
-    const q = questions[Math.floor(Math.random() * questions.length)];
-    const el = document.getElementById('question');
-    el.textContent = q;
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 500);
+    const questionElement = document.getElementById('question');
+
+    // Анимация исчезновения
+    questionElement.style.animation = 'none';
+    void questionElement.offsetWidth; // Trigger reflow
+    questionElement.style.animation = 'fadeIn 0.5s';
+
+    // Выбор случайного вопроса
+    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+
+    // Задержка для плавного появления нового вопроса
+    setTimeout(() => {
+        questionElement.innerHTML = `<p>${randomQuestion}</p>`;
+    }, 200);
 });
