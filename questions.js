@@ -1,4 +1,4 @@
-// Вопросы в правильной кодировке
+// Вопросы в явном UTF-8 формате
 const questions = [
     "Какой запах вызывает у тебя ностальгию?",
     "Когда ты в последний раз чувствовал(а) себя настоящим(ей)?",
@@ -22,21 +22,16 @@ const questionElement = document.getElementById('question');
 const counterElement = document.getElementById('counter');
 
 document.getElementById('spin').addEventListener('click', () => {
-    // Плавное исчезновение
     questionElement.style.opacity = '0';
 
     setTimeout(() => {
-        // Выбираем случайный вопрос
         const randomIndex = Math.floor(Math.random() * questions.length);
         const randomQuestion = questions[randomIndex];
 
-        // Вставляем вопрос с анимацией
         questionElement.innerHTML = `<p class="new-question">${randomQuestion}</p>`;
         questionElement.style.opacity = '1';
 
-        // Обновляем счетчик
         counter++;
         counterElement.textContent = counter;
-
-    }, 300); // Задержка для плавности анимации
+    }, 300);
 });
