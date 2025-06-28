@@ -2,24 +2,32 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вопросы для сближения</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Marck+Script&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <div class="hearts">❤️ ❤️ ❤️</div>
+        <div class="decoration">✧･ﾟ: *✧･ﾟ:* *:･ﾟ✧*:･ﾟ✧</div>
         <h1>Вопросы для сближения</h1>
         <p class="subtitle">Откройте друг другу новые грани</p>
+
         <div id="question" class="question-box">
-            <p>Нажмите кнопку, чтобы получить вопрос</p>
+            <p>Нажмите кнопку ниже, чтобы получить вопрос</p>
         </div>
-        <button id="spin" class="romantic-btn">Получить вопрос</button>
-        <div class="instructions">
-            <p>Обсудите ответы друг с другом — это сблизит вас</p>
+
+        <button id="spin" class="romantic-btn">
+            <span class="btn-text">Получить вопрос</span>
+            <span class="heart">❤</span>
+        </button>
+
+        <div class="counter">
+            <span id="counter">0</span> вопросов задано
         </div>
     </div>
+
     <script src="questions.js"></script>
 </body>
 </html>
