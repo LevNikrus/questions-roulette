@@ -5,79 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вопросы для сближения</title>
     <style>
+        :root {
+            --primary-color: #e75480;
+            --secondary-color: #ff8e9e;
+            --bg-gradient: linear-gradient(135deg, #fff5f5, #ffecef);
+            --card-bg: white;
+            --text-color: #333;
+            --border-color: #ffc0cb;
+        }
+
         body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #fff5f5, #ffecef);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
             margin: 0;
             padding: 20px;
             min-height: 100vh;
-            color: #333;
+            color: var(--text-color);
+            line-height: 1.6;
         }
 
         .container {
             max-width: 800px;
             margin: 0 auto;
-            background: white;
+            background: var(--card-bg);
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         h1 {
-            color: #e75480;
+            color: var(--primary-color);
             text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-style: italic;
         }
 
         .mode-selector {
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
+            gap: 10px;
         }
 
         .mode-btn {
-            padding: 10px 20px;
-            margin: 0 10px;
+            padding: 12px 24px;
             background: #f0f0f0;
             border: none;
-            border-radius: 20px;
+            border-radius: 50px;
             cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
         }
 
             .mode-btn.active {
-                background: linear-gradient(to right, #ff6b8b, #ff8e9e);
+                background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
                 color: white;
+                box-shadow: 0 4px 10px rgba(231, 84, 128, 0.3);
             }
 
         .question-box {
-            min-height: 150px;
-            padding: 20px;
-            margin: 20px 0;
+            min-height: 180px;
+            padding: 25px;
+            margin: 25px 0;
             background: #fff9fb;
-            border: 2px dashed #ffc0cb;
-            border-radius: 10px;
-            font-size: 1.2rem;
+            border: 2px dashed var(--border-color);
+            border-radius: 15px;
+            font-size: 1.3rem;
             text-align: center;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s;
         }
+
+            .question-box.empty {
+                color: #888;
+                font-style: italic;
+            }
 
         .btn-group {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 10px;
-            margin: 20px 0;
+            gap: 15px;
+            margin: 25px 0;
         }
 
         button {
-            background: linear-gradient(to right, #ff6b8b, #ff8e9e);
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 25px;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
             button:hover {
@@ -85,33 +118,55 @@
                 box-shadow: 0 5px 15px rgba(255,107,139,0.4);
             }
 
+            button:disabled {
+                opacity: 0.7;
+                transform: none !important;
+                box-shadow: none !important;
+            }
+
         .admin-panel {
             margin-top: 30px;
-            padding: 20px;
+            padding: 25px;
             background: #f9f9f9;
-            border-radius: 10px;
+            border-radius: 15px;
             display: none;
         }
 
         textarea {
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
+            padding: 15px;
+            margin: 15px 0;
             border: 1px solid #ddd;
-            border-radius: 5px;
-            min-height: 100px;
+            border-radius: 10px;
+            min-height: 120px;
+            font-family: inherit;
+            font-size: 1rem;
         }
 
         .counter {
             text-align: center;
-            margin-top: 20px;
-            color: #888;
+            margin-top: 25px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            margin-left: 10px;
+            font-size: 0.9rem;
+        }
+
+        .success {
+            color: #28a745;
+        }
+
+        .error {
+            color: #dc3545;
         }
 
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border: 3px solid rgba(255,255,255,.3);
             border-radius: 50%;
             border-top-color: white;
@@ -123,26 +178,79 @@
                 transform: rotate(360deg);
             }
         }
+
+        .rules {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+            .rules h3 {
+                margin-top: 0;
+                color: var(--primary-color);
+            }
+
+            .rules ol {
+                padding-left: 20px;
+            }
+
+        .heart {
+            color: var(--primary-color);
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .btn-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>💞 Вопросы для сближения 💞</h1>
+        <p class="subtitle">Откройте друг другу новые грани</p>
 
         <div class="mode-selector">
             <button class="mode-btn active" data-mode="play">Играть</button>
-            <button class="mode-btn" data-mode="admin">Редактор (только для тебя)</button>
+            <button class="mode-btn" data-mode="admin">Редактор</button>
+            <button class="mode-btn" data-mode="rules">Правила</button>
         </div>
 
         <div id="play-mode">
-            <div class="question-box" id="question">
-                Нажмите кнопку, чтобы получить вопрос
+            <div class="question-box empty" id="question">
+                Выберите категорию вопросов
             </div>
 
             <div class="btn-group">
-                <button id="btn-her">Её вопросы</button>
-                <button id="btn-his">Твои вопросы</button>
-                <button id="btn-gpt">Общие вопросы</button>
+                <button id="btn-her">
+                    <span>Её вопросы</span>
+                    <span class="heart">❤️</span>
+                </button>
+                <button id="btn-his">
+                    <span>Твои вопросы</span>
+                    <span class="heart">💙</span>
+                </button>
+                <button id="btn-common">
+                    <span>Общие вопросы</span>
+                    <span class="heart">💜</span>
+                </button>
             </div>
 
             <div class="counter">
@@ -152,45 +260,44 @@
 
         <div id="admin-mode" class="admin-panel">
             <h3>Редактирование вопросов</h3>
+            <p>Здесь вы можете управлять своими вопросами. Изменения сохраняются локально.</p>
 
             <div>
-                <h4>Её вопросы (видит только она)</h4>
-                <textarea id="her-questions" placeholder="Каждый вопрос с новой строки"></textarea>
-                <button id="save-her">Сохранить её вопросы</button>
-                <span id="her-status" style="margin-left: 10px;"></span>
-            </div>
-
-            <div style="margin-top: 20px;">
-                <h4>Твои вопросы (видишь только ты)</h4>
+                <h4>Твои личные вопросы</h4>
                 <textarea id="his-questions" placeholder="Каждый вопрос с новой строки"></textarea>
-                <button id="save-his">Сохранить твои вопросы</button>
-                <span id="his-status" style="margin-left: 10px;"></span>
+                <button id="save-his">
+                    <span>Сохранить мои вопросы</span>
+                </button>
+                <span id="his-status" class="status"></span>
             </div>
 
-            <div style="margin-top: 20px;">
-                <h4>Общие вопросы (видят оба)</h4>
-                <textarea id="common-questions" placeholder="Каждый вопрос с новой строки"></textarea>
-                <button id="save-common">Сохранить общие вопросы</button>
-                <span id="common-status" style="margin-left: 10px;"></span>
+            <div style="margin-top: 30px;">
+                <button id="sync-all">
+                    <span>Синхронизировать все вопросы</span>
+                </button>
+                <span id="sync-status" class="status"></span>
             </div>
+        </div>
 
-            <div style="margin-top: 20px;">
-                <button id="sync-google">Синхронизировать с Google Таблицей</button>
-                <span id="sync-status"></span>
+        <div id="rules-mode" class="admin-panel">
+            <div class="rules">
+                <h3>🎯 Правила игры</h3>
+                <ol>
+                    <li>Выберите категорию вопросов: её, твои или общие</li>
+                    <li>Нажмите на кнопку категории, чтобы получить случайный вопрос</li>
+                    <li>Отвечайте честно и откровенно</li>
+                    <li>Обсудите ответы друг друга</li>
+                    <li>Попробуйте ответить на все вопросы из каждой категории</li>
+                </ol>
+                <p><strong>Цель:</strong> Узнать друг друга глубже, выйти за рамки обычных тем для разговоров.</p>
             </div>
         </div>
     </div>
 
     <script>
-        // Ваши настройки Google Sheets
-        const SHEET_ID = '1wVcvPztE_Wfjw8yhDcTMKvc_35JhPx5Goj0wXvTBhPg';
-        const API_KEY = 'AIzaSyBHaRk3ji6hHN6jHdLiIKdv1VjiK0WE6qw';
-        const SHEET_NAME = 'Questions';
-
-        // Элементы интерфейса
-        const questionElement = document.getElementById('question');
-        const counterElement = document.getElementById('counter');
-        let counter = 0;
+        // Конфигурация таблиц
+        const HER_QUESTIONS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS_1_KfnYZ65cMcaAAaBRc321nHTDmt6-NgVq5fM2Sw1eXannMBEJIOYzGxgyT_jA2an7tXSBMSOClP/pub?gid=0&single=true&output=csv';
+        const HIS_QUESTIONS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQY-pwuIJs4jMtI1YPNGdZRr-0ATB9tJXaRaZ18wBlJ3QyS_5Y0p-tuzVnyR4yyoTpRF-Mtkcfsh6fo/pub?gid=0&single=true&output=csv';
 
         // Данные вопросов
         let questions = {
@@ -201,158 +308,187 @@
 
         // Инициализация
         document.addEventListener('DOMContentLoaded', async () => {
-            // Загрузка вопросов из localStorage
-            loadQuestionsFromLocalStorage();
+            // Загрузка вопросов
+            await loadAllQuestions();
 
-            // Настройка переключения режимов
+            // Настройка интерфейса
+            setupEventListeners();
+        });
+
+        // Загрузка всех вопросов
+        async function loadAllQuestions() {
+            try {
+                await Promise.all([
+                    loadHerQuestions(),
+                    loadHisQuestions()
+                ]);
+
+                // Загружаем общие вопросы из её таблицы (вторая колонка)
+                const herData = await fetchCSV(HER_QUESTIONS_SHEET_URL);
+                questions.common = parseCSV(herData, 1); // Вторая колонка
+
+                // Сохраняем в localStorage
+                saveQuestionsToLocalStorage();
+
+                console.log('Все вопросы успешно загружены');
+            } catch (error) {
+                console.error('Ошибка загрузки вопросов:', error);
+                loadFromLocalStorage();
+            }
+        }
+
+        // Загрузка её вопросов
+        async function loadHerQuestions() {
+            const data = await fetchCSV(HER_QUESTIONS_SHEET_URL);
+            questions.her = parseCSV(data, 0); // Первая колонка
+        }
+
+        // Загрузка твоих вопросов
+        async function loadHisQuestions() {
+            // Сначала пробуем из localStorage
+            const localHisQuestions = JSON.parse(localStorage.getItem('hisQuestions'));
+            if (localHisQuestions && localHisQuestions.length > 0) {
+                questions.his = localHisQuestions;
+                return;
+            }
+
+            // Если в localStorage нет, загружаем из таблицы
+            const data = await fetchCSV(HIS_QUESTIONS_SHEET_URL);
+            questions.his = parseCSV(data, 0); // Первая колонка
+        }
+
+        // Загрузка CSV
+        async function fetchCSV(url) {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Ошибка загрузки CSV');
+            return await response.text();
+        }
+
+        // Парсинг CSV
+        function parseCSV(csvText, columnIndex) {
+            return csvText.split('\n')
+                .slice(1) // Пропускаем заголовок
+                .map(line => {
+                    const columns = line.split(',');
+                    return columns[columnIndex]?.trim()?.replace(/^"|"$/g, '');
+                })
+                .filter(q => q && q.length > 0);
+        }
+
+        // Загрузка из localStorage
+        function loadFromLocalStorage() {
+            const savedHisQuestions = JSON.parse(localStorage.getItem('hisQuestions'));
+            if (savedHisQuestions) {
+                questions.his = savedHisQuestions;
+            }
+        }
+
+        // Сохранение в localStorage
+        function saveQuestionsToLocalStorage() {
+            localStorage.setItem('hisQuestions', JSON.stringify(questions.his));
+        }
+
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Переключение режимов
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
 
-                    if (btn.dataset.mode === 'play') {
-                        document.getElementById('play-mode').style.display = 'block';
-                        document.getElementById('admin-mode').style.display = 'none';
-                    } else {
-                        document.getElementById('play-mode').style.display = 'none';
-                        document.getElementById('admin-mode').style.display = 'block';
-                        // Заполняем текстовые поля
-                        document.getElementById('her-questions').value = questions.her.join('\n');
+                    document.getElementById('play-mode').style.display = 'none';
+                    document.getElementById('admin-mode').style.display = 'none';
+                    document.getElementById('rules-mode').style.display = 'none';
+
+                    document.getElementById(`${btn.dataset.mode}-mode`).style.display = 'block';
+
+                    if (btn.dataset.mode === 'admin') {
                         document.getElementById('his-questions').value = questions.his.join('\n');
-                        document.getElementById('common-questions').value = questions.common.join('\n');
                     }
                 });
             });
 
-            // Обработчики кнопок
-            document.getElementById('btn-her').addEventListener('click', () => {
-                showRandomQuestion('her');
-            });
+            // Кнопки вопросов
+            document.getElementById('btn-her').addEventListener('click', () => showRandomQuestion('her'));
+            document.getElementById('btn-his').addEventListener('click', () => showRandomQuestion('his'));
+            document.getElementById('btn-common').addEventListener('click', () => showRandomQuestion('common'));
 
-            document.getElementById('btn-his').addEventListener('click', () => {
-                showRandomQuestion('his');
-            });
+            // Сохранение вопросов
+            document.getElementById('save-his').addEventListener('click', async () => {
+                const button = document.getElementById('save-his');
+                const status = document.getElementById('his-status');
 
-            document.getElementById('btn-gpt').addEventListener('click', () => {
-                showRandomQuestion('common');
-            });
-
-            // Обработчики сохранения
-            document.getElementById('save-her').addEventListener('click', () => {
-                saveQuestions('her', document.getElementById('her-questions').value);
-                document.getElementById('her-status').textContent = '✓ Сохранено';
-                setTimeout(() => document.getElementById('her-status').textContent = '', 2000);
-            });
-
-            document.getElementById('save-his').addEventListener('click', () => {
-                saveQuestions('his', document.getElementById('his-questions').value);
-                document.getElementById('his-status').textContent = '✓ Сохранено';
-                setTimeout(() => document.getElementById('his-status').textContent = '', 2000);
-            });
-
-            document.getElementById('save-common').addEventListener('click', () => {
-                saveQuestions('common', document.getElementById('common-questions').value);
-                document.getElementById('common-status').textContent = '✓ Сохранено';
-                setTimeout(() => document.getElementById('common-status').textContent = '', 2000);
-            });
-
-            document.getElementById('sync-google').addEventListener('click', async () => {
-                const btn = document.getElementById('sync-google');
-                const status = document.getElementById('sync-status');
-                btn.disabled = true;
-                status.innerHTML = '<span class="loading"></span> Синхронизация...';
+                button.disabled = true;
+                status.innerHTML = '<span class="loading"></span> Сохранение...';
 
                 try {
-                    await loadQuestionsFromGoogleSheets();
-                    status.textContent = '✓ Синхронизировано';
+                    questions.his = document.getElementById('his-questions').value
+                        .split('\n')
+                        .map(q => q.trim())
+                        .filter(q => q);
 
-                    // Обновляем поля редактора
-                    if (document.getElementById('admin-mode').style.display !== 'none') {
-                        document.getElementById('her-questions').value = questions.her.join('\n');
-                        document.getElementById('his-questions').value = questions.his.join('\n');
-                        document.getElementById('common-questions').value = questions.common.join('\n');
-                    }
-                } catch (e) {
-                    status.textContent = '✗ Ошибка синхронизации';
-                    console.error(e);
+                    saveQuestionsToLocalStorage();
+                    status.innerHTML = '<span class="success">✓ Сохранено</span>';
+                } catch (error) {
+                    console.error(error);
+                    status.innerHTML = '<span class="error">✗ Ошибка</span>';
                 } finally {
                     setTimeout(() => status.textContent = '', 2000);
-                    btn.disabled = false;
+                    button.disabled = false;
                 }
             });
 
-            // Первоначальная загрузка вопросов из Google Sheets
-            try {
-                await loadQuestionsFromGoogleSheets();
-            } catch (e) {
-                console.log('Используем локальные вопросы:', e);
-            }
-        });
+            // Синхронизация
+            document.getElementById('sync-all').addEventListener('click', async () => {
+                const button = document.getElementById('sync-all');
+                const status = document.getElementById('sync-status');
 
-        // Загрузка вопросов из Google Sheets
-        async function loadQuestionsFromGoogleSheets() {
-            const url = 'https://docs.google.com/spreadsheets/d/1wVcvPztE_Wfjw8yhDcTMKvc_35JhPx5Goj0wXvTBhPg/gviz/tq?tqx=out:csv&sheet=Questions';
-            const response = await fetch(url);
-            const csvText = await response.text();
+                button.disabled = true;
+                status.innerHTML = '<span class="loading"></span> Синхронизация...';
 
-            const lines = csvText.split('\n').filter(line => line.trim());
-            questions.her = [];
-            questions.his = [];
-            questions.common = [];
+                try {
+                    await loadAllQuestions();
+                    status.innerHTML = '<span class="success">✓ Синхронизировано</span>';
 
-            for (let i = 1; i < lines.length; i++) {
-                const [her, his, common] = lines[i].split(',').map(s => s?.trim()?.replace(/^"|"$/g, ''));
-                if (her) questions.her.push(her);
-                if (his) questions.his.push(his);
-                if (common) questions.common.push(common);
-            }
-
-            saveAllQuestionsToLocalStorage();
-            console.log('Вопросы загружены из опубликованной Google Таблицы.');
-        }
-
-
-        // Загрузка вопросов из localStorage
-        function loadQuestionsFromLocalStorage() {
-            questions.her = JSON.parse(localStorage.getItem('herQuestions')) || [];
-            questions.his = JSON.parse(localStorage.getItem('hisQuestions')) || [];
-            questions.common = JSON.parse(localStorage.getItem('commonQuestions')) || [];
-
-            // Если вопросы пусты, добавляем примеры
-            if (questions.her.length === 0 && questions.his.length === 0 && questions.common.length === 0) {
-                questions.her = ["Какой момент в наших отношениях тебе запомнился больше всего?"];
-                questions.his = ["Что бы ты хотела, чтобы я делал чаще?"];
-                questions.common = ["Если бы у нас был идеальный день, как бы он прошел?"];
-                saveAllQuestionsToLocalStorage();
-            }
-        }
-
-        // Сохранение всех вопросов в localStorage
-        function saveAllQuestionsToLocalStorage() {
-            localStorage.setItem('herQuestions', JSON.stringify(questions.her));
-            localStorage.setItem('hisQuestions', JSON.stringify(questions.his));
-            localStorage.setItem('commonQuestions', JSON.stringify(questions.common));
-        }
-
-        // Сохранение вопросов определенного типа
-        function saveQuestions(type, text) {
-            questions[type] = text.split('\n').map(q => q.trim()).filter(q => q);
-            localStorage.setItem(`${type}Questions`, JSON.stringify(questions[type]));
+                    // Обновляем поле редактора если открыто
+                    if (document.getElementById('admin-mode').style.display === 'block') {
+                        document.getElementById('his-questions').value = questions.his.join('\n');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    status.innerHTML = '<span class="error">✗ Ошибка синхронизации</span>';
+                } finally {
+                    setTimeout(() => status.textContent = '', 2000);
+                    button.disabled = false;
+                }
+            });
         }
 
         // Показать случайный вопрос
         function showRandomQuestion(type) {
+            const questionBox = document.getElementById('question');
             const availableQuestions = questions[type];
 
             if (availableQuestions.length === 0) {
-                questionElement.textContent = `В этом разделе пока нет вопросов`;
+                questionBox.textContent = `В этой категории пока нет вопросов`;
+                questionBox.classList.add('empty');
                 return;
             }
 
-            const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-            questionElement.textContent = availableQuestions[randomIndex];
-            counter++;
-            counterElement.textContent = counter;
+            questionBox.classList.remove('empty');
+
+            // Анимация исчезновения
+            questionBox.style.opacity = '0';
+
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+                questionBox.textContent = availableQuestions[randomIndex];
+                questionBox.style.opacity = '1';
+
+                // Увеличиваем счетчик
+                const counter = document.getElementById('counter');
+                counter.textContent = parseInt(counter.textContent) + 1;
+            }, 300);
         }
     </script>
 </body>
