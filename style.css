@@ -1,50 +1,33 @@
-@keyframes float {
-    0% {
-        transform: translateY(0px);
-    }
-
-    50% {
-        transform: translateY(-5px);
-    }
-
-    100% {
-        transform: translateY(0px);
-    }
-}
-
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     display: flex;
     min-height: 100vh;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(45deg, #ffcce6, #fadadd);
+    background: linear-gradient(135deg, #fff5f5 0%, #ffecef 100%);
     margin: 0;
     color: #333;
-    line-height: 1.6;
 }
 
 .container {
     text-align: center;
-    background: rgba(255, 255, 255, 0.95);
+    background: white;
     padding: 2.5rem;
     border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     max-width: 500px;
     width: 90%;
-    position: relative;
-    overflow: hidden;
 }
 
 h1 {
-    font-family: 'Marck Script', cursive;
-    color: #d23669;
-    font-size: 2.5rem;
+    font-family: 'Caveat', cursive;
+    color: #e75480;
+    font-size: 2.8rem;
     margin-bottom: 0.5rem;
 }
 
 .subtitle {
-    color: #666;
+    color: #777;
     margin-bottom: 2rem;
     font-size: 1.1rem;
 }
@@ -54,89 +37,74 @@ h1 {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #fff;
+    background: #fff9fb;
     border-radius: 15px;
     padding: 1.5rem;
     margin: 1.5rem 0;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    border: 2px solid #ffe6ee;
-    transition: all 0.4s ease;
+    border: 2px dashed #ffc0cb;
+    font-size: 1.2rem;
+    line-height: 1.6;
 }
-
-    .question-box p {
-        margin: 0;
-        font-size: 1.2rem;
-        line-height: 1.6;
-    }
 
 .romantic-btn {
     margin-top: 1rem;
     padding: 1rem 2.5rem;
-    font-size: 1.2rem;
-    background: linear-gradient(45deg, #ff758c, #ff7eb3);
+    font-size: 1.1rem;
+    background: linear-gradient(to right, #ff6b8b, #ff8e9e);
     color: white;
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 20px rgba(255, 117, 140, 0.4);
+    transition: all 0.3s;
     display: flex;
     align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
+    gap: 10px;
 }
 
     .romantic-btn:hover {
         transform: translateY(-3px);
-        box-shadow: 0 7px 25px rgba(255, 117, 140, 0.6);
+        box-shadow: 0 7px 20px rgba(255,107,139,0.4);
     }
 
-    .romantic-btn:active {
-        transform: translateY(1px);
-    }
-
-.heart {
-    margin-left: 10px;
-    animation: float 2s infinite;
+.hearts {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    animation: pulse 1.5s infinite;
 }
 
 .counter {
-    margin-top: 2rem;
-    font-size: 0.9rem;
+    margin-top: 1.5rem;
     color: #888;
+    font-size: 0.9rem;
 }
 
-.decoration {
-    color: #ffb6c1;
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-    animation: fadeIn 2s;
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Анимация вопроса */
+.new-question {
+    animation: fadeIn 0.8s;
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
+        transform: translateY(10px);
     }
 
     to {
         opacity: 1;
-    }
-}
-
-/* Анимация для нового вопроса */
-@keyframes slideIn {
-    0% {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    100% {
-        opacity: 1;
         transform: translateY(0);
     }
-}
-
-.new-question {
-    animation: slideIn 0.6s ease-out;
 }
