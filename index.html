@@ -28,35 +28,24 @@
             text-align: center;
         }
 
-        .tabs {
+        .mode-selector {
             display: flex;
+            justify-content: center;
             margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
         }
 
-        .tab {
+        .mode-btn {
             padding: 10px 20px;
+            margin: 0 10px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
             cursor: pointer;
-            border: 1px solid transparent;
         }
 
-            .tab.active {
-                border-color: #ddd;
-                border-bottom-color: white;
-                border-radius: 5px 5px 0 0;
-                background: white;
-                font-weight: bold;
-            }
-
-        .tab-content {
-            display: none;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 0 5px 5px 5px;
-        }
-
-            .tab-content.active {
-                display: block;
+            .mode-btn.active {
+                background: linear-gradient(to right, #ff6b8b, #ff8e9e);
+                color: white;
             }
 
         .question-box {
@@ -67,6 +56,18 @@
             border: 2px dashed #ffc0cb;
             border-radius: 10px;
             font-size: 1.2rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
         }
 
         button {
@@ -76,7 +77,6 @@
             padding: 10px 20px;
             border-radius: 50px;
             cursor: pointer;
-            margin: 5px;
             transition: all 0.3s;
         }
 
@@ -85,20 +85,21 @@
                 box-shadow: 0 5px 15px rgba(255,107,139,0.4);
             }
 
-        textarea, input {
+        .admin-panel {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            display: none;
+        }
+
+        textarea {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #ddd;
             border-radius: 5px;
-        }
-
-        .question-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #eee;
-            padding: 10px;
-            margin: 10px 0;
+            min-height: 100px;
         }
 
         .counter {
@@ -106,26 +107,30 @@
             margin-top: 20px;
             color: #888;
         }
+
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>💞 Вопросы для сближения 💞</h1>
 
-        <div class="tabs">
-            <div class="tab active" data-tab="game">Игра</div>
-            <div class="tab" data-tab="editor">Редактор</div>
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="play">Играть</button>
+            <button class="mode-btn" data-mode="admin">Редактор (только для тебя)</button>
         </div>
 
-        <div id="game" class="tab-content active">
+        <div id="play-mode">
             <div class="question-box" id="question">
                 Нажмите кнопку, чтобы получить вопрос
             </div>
 
-            <div style="text-align: center;">
-                <button id="spin-her">Её вопросы</button>
-                <button id="spin-his">Мои вопросы</button>
-                <button id="spin-gpt">ChatGPT вопросы</button>
+            <div class="btn-group">
+                <button id="btn-her">Её вопросы</button>
+                <button id="btn-his">Твои вопросы</button>
+                <button id="btn-gpt">Вопросы от ChatGPT</button>
             </div>
 
             <div class="counter">
@@ -133,189 +138,216 @@
             </div>
         </div>
 
-        <div id="editor" class="tab-content">
-            <h3>Её вопросы</h3>
-            <div class="question-list" id="her-questions-list"></div>
-            <textarea id="new-her-question" placeholder="Новый вопрос..."></textarea>
-            <button id="add-her-question">Добавить её вопрос</button>
+        <div id="admin-mode" class="admin-panel">
+            <h3>Редактирование вопросов</h3>
 
-            <h3>Мои вопросы</h3>
-            <div class="question-list" id="his-questions-list"></div>
-            <textarea id="new-his-question" placeholder="Новый вопрос..."></textarea>
-            <button id="add-his-question">Добавить мой вопрос</button>
+            <div>
+                <h4>Её вопросы (видит только она)</h4>
+                <textarea id="her-questions" placeholder="Каждый вопрос с новой строки"></textarea>
+                <button id="save-her">Сохранить её вопросы</button>
+            </div>
 
-            <h3>ChatGPT вопросы</h3>
-            <div class="question-list" id="gpt-questions-list"></div>
-            <button id="generate-gpt">Сгенерировать вопросы GPT</button>
+            <div style="margin-top: 20px;">
+                <h4>Твои вопросы (видишь только ты)</h4>
+                <textarea id="his-questions" placeholder="Каждый вопрос с новой строки"></textarea>
+                <button id="save-his">Сохранить твои вопросы</button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h4>Общие вопросы (видят оба)</h4>
+                <textarea id="common-questions" placeholder="Каждый вопрос с новой строки"></textarea>
+                <button id="save-common">Сохранить общие вопросы</button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button id="load-default">Загрузить вопросы по умолчанию</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // Хранилище вопросов
-        const questionSets = {
-            her: JSON.parse(localStorage.getItem('herQuestions')) || [
-                "Какой момент в наших отношениях тебе запомнился больше всего?",
-                "Что тебе во мне нравится, о чем я могу не догадываться?"
-            ],
-            his: JSON.parse(localStorage.getItem('hisQuestions')) || [
-                "Что бы ты хотела, чтобы я делал чаще?",
-                "Какой наш совместный ритуал тебе нравится больше всего?"
-            ],
-            gpt: JSON.parse(localStorage.getItem('gptQuestions')) || [
-                "Если бы у нас был идеальный день, как бы он прошел?",
-                "Какое качество в партнере ты ценишь больше всего?"
-            ]
-        };
+        // Конфигурация Google Sheets
+        const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID'; // Замените на ID вашей таблицы
+        const API_KEY = 'YOUR_GOOGLE_API_KEY'; // Замените на ваш API ключ
+        const SHEET_NAME = 'Questions'; // Название листа в таблице
 
         // Элементы интерфейса
         const questionElement = document.getElementById('question');
         const counterElement = document.getElementById('counter');
         let counter = 0;
 
-        // Редактор
-        const herQuestionsList = document.getElementById('her-questions-list');
-        const hisQuestionsList = document.getElementById('his-questions-list');
-        const gptQuestionsList = document.getElementById('gpt-questions-list');
-
-        // Инициализация редактора
-        function initEditor() {
-            renderQuestionList('her');
-            renderQuestionList('his');
-            renderQuestionList('gpt');
-        }
-
-        // Отображение списка вопросов
-        function renderQuestionList(type) {
-            const listElement = document.getElementById(`${type}-questions-list`);
-            listElement.innerHTML = '';
-
-            questionSets[type].forEach((q, i) => {
-                const div = document.createElement('div');
-                div.style.padding = '5px';
-                div.style.borderBottom = '1px solid #eee';
-                div.style.display = 'flex';
-                div.style.justifyContent = 'space-between';
-
-                const text = document.createElement('span');
-                text.textContent = q;
-
-                const delBtn = document.createElement('button');
-                delBtn.textContent = '×';
-                delBtn.style.background = '#ff6b6b';
-                delBtn.style.padding = '2px 8px';
-                delBtn.onclick = () => {
-                    questionSets[type].splice(i, 1);
-                    saveQuestions(type);
-                    renderQuestionList(type);
-                };
-
-                div.appendChild(text);
-                div.appendChild(delBtn);
-                listElement.appendChild(div);
-            });
-        }
-
-        // Сохранение вопросов
-        function saveQuestions(type) {
-            localStorage.setItem(`${type}Questions`, JSON.stringify(questionSets[type]));
-        }
-
-        // Генерация вопросов от ChatGPT (имитация)
-        async function generateGPTQuestions() {
-            // В реальности здесь был бы запрос к API ChatGPT
-            // Это имитация с задержкой
-            const gptQuestions = [
-                "Если бы вы могли отправиться в любое место вместе, куда бы вы поехали?",
-                "Что делает ваши отношения уникальными?",
-                "Какое совместное достижение вас больше всего радует?",
-                "Как вы поддерживаете друг друга в трудные моменты?",
-                "Что нового вы хотели бы попробовать вместе?"
-            ];
-
-            // Имитация загрузки
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            questionSets.gpt = [...questionSets.gpt, ...gptQuestions];
-            saveQuestions('gpt');
-            renderQuestionList('gpt');
-        }
-
-        // Получение случайного вопроса
-        function getRandomQuestion(type) {
-            const questions = questionSets[type];
-            if (questions.length === 0) return "Нет вопросов в этом наборе";
-
-            const randomIndex = Math.floor(Math.random() * questions.length);
-            return questions[randomIndex];
-        }
-
-        // Переключение вкладок
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-
-                if (tab.dataset.tab === 'editor') {
-                    initEditor();
-                }
-            });
-        });
-
-        // Обработчики кнопок
-        document.getElementById('spin-her').addEventListener('click', () => {
-            questionElement.textContent = getRandomQuestion('her');
-            counter++;
-            counterElement.textContent = counter;
-        });
-
-        document.getElementById('spin-his').addEventListener('click', () => {
-            questionElement.textContent = getRandomQuestion('his');
-            counter++;
-            counterElement.textContent = counter;
-        });
-
-        document.getElementById('spin-gpt').addEventListener('click', () => {
-            questionElement.textContent = getRandomQuestion('gpt');
-            counter++;
-            counterElement.textContent = counter;
-        });
-
-        document.getElementById('add-her-question').addEventListener('click', () => {
-            const question = document.getElementById('new-her-question').value.trim();
-            if (question) {
-                questionSets.her.push(question);
-                saveQuestions('her');
-                renderQuestionList('her');
-                document.getElementById('new-her-question').value = '';
-            }
-        });
-
-        document.getElementById('add-his-question').addEventListener('click', () => {
-            const question = document.getElementById('new-his-question').value.trim();
-            if (question) {
-                questionSets.his.push(question);
-                saveQuestions('his');
-                renderQuestionList('his');
-                document.getElementById('new-his-question').value = '';
-            }
-        });
-
-        document.getElementById('generate-gpt').addEventListener('click', async () => {
-            const btn = document.getElementById('generate-gpt');
-            btn.disabled = true;
-            btn.textContent = 'Генерация...';
-
-            await generateGPTQuestions();
-
-            btn.textContent = 'Сгенерировать вопросы GPT';
-            btn.disabled = false;
-        });
+        // Данные вопросов
+        let questions = {
+            her: [],
+            his: [],
+            common: []
+        };
 
         // Инициализация
-        initEditor();
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Загрузка вопросов из localStorage
+            loadQuestionsFromLocalStorage();
+
+            // Настройка переключения режимов
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    if (btn.dataset.mode === 'play') {
+                        document.getElementById('play-mode').style.display = 'block';
+                        document.getElementById('admin-mode').style.display = 'none';
+                    } else {
+                        document.getElementById('play-mode').style.display = 'none';
+                        document.getElementById('admin-mode').style.display = 'block';
+                        // Заполняем текстовые поля при открытии редактора
+                        document.getElementById('her-questions').value = questions.her.join('\n');
+                        document.getElementById('his-questions').value = questions.his.join('\n');
+                        document.getElementById('common-questions').value = questions.common.join('\n');
+                    }
+                });
+            });
+
+            // Обработчики кнопок
+            document.getElementById('btn-her').addEventListener('click', () => {
+                showRandomQuestion('her');
+            });
+
+            document.getElementById('btn-his').addEventListener('click', () => {
+                showRandomQuestion('his');
+            });
+
+            document.getElementById('btn-gpt').addEventListener('click', () => {
+                showRandomQuestion('common');
+            });
+
+            // Обработчики сохранения
+            document.getElementById('save-her').addEventListener('click', () => {
+                saveQuestions('her', document.getElementById('her-questions').value);
+            });
+
+            document.getElementById('save-his').addEventListener('click', () => {
+                saveQuestions('his', document.getElementById('his-questions').value);
+            });
+
+            document.getElementById('save-common').addEventListener('click', () => {
+                saveQuestions('common', document.getElementById('common-questions').value);
+            });
+
+            document.getElementById('load-default').addEventListener('click', () => {
+                loadDefaultQuestions();
+            });
+
+            // Первоначальная загрузка вопросов из Google Sheets
+            try {
+                await loadQuestionsFromGoogleSheets();
+            } catch (e) {
+                console.error('Ошибка загрузки из Google Sheets:', e);
+                // Используем сохраненные локально вопросы
+            }
+        });
+
+        // Загрузка вопросов из Google Sheets
+        async function loadQuestionsFromGoogleSheets() {
+            if (!SHEET_ID || SHEET_ID === 'YOUR_GOOGLE_SHEET_ID') {
+                console.log('Google Sheets не настроен, используем локальные вопросы');
+                return;
+            }
+
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.values && data.values.length > 0) {
+                    // Предполагаем, что в таблице 3 колонки: Её вопросы, Твои вопросы, Общие вопросы
+                    questions.her = data.values.map(row => row[0]).filter(q => q);
+                    questions.his = data.values.map(row => row[1]).filter(q => q);
+                    questions.common = data.values.map(row => row[2]).filter(q => q);
+
+                    // Сохраняем в localStorage
+                    saveAllQuestionsToLocalStorage();
+
+                    console.log('Вопросы успешно загружены из Google Sheets');
+                }
+            } catch (error) {
+                console.error('Ошибка при загрузке из Google Sheets:', error);
+                throw error;
+            }
+        }
+
+        // Загрузка вопросов из localStorage
+        function loadQuestionsFromLocalStorage() {
+            questions.her = JSON.parse(localStorage.getItem('herQuestions')) || [];
+            questions.his = JSON.parse(localStorage.getItem('hisQuestions')) || [];
+            questions.common = JSON.parse(localStorage.getItem('commonQuestions')) || [];
+
+            // Если вопросы пусты, загружаем вопросы по умолчанию
+            if (questions.her.length === 0 && questions.his.length === 0 && questions.common.length === 0) {
+                loadDefaultQuestions();
+            }
+        }
+
+        // Загрузка вопросов по умолчанию
+        function loadDefaultQuestions() {
+            questions.her = [
+                "Какой момент в наших отношениях тебе запомнился больше всего?",
+                "Что тебе во мне нравится, о чем я могу не догадываться?"
+            ];
+
+            questions.his = [
+                "Что бы ты хотела, чтобы я делал чаще?",
+                "Какой наш совместный ритуал тебе нравится больше всего?"
+            ];
+
+            questions.common = [
+                "Если бы у нас был идеальный день, как бы он прошел?",
+                "Какое качество в партнере ты ценишь больше всего?",
+                "Что делает отношения по-настоящему крепкими?",
+                "Какой совместный опыт вас сблизил больше всего?",
+                "Что тебя вдохновляет в наших отношениях?"
+            ];
+
+            // Сохраняем
+            saveAllQuestionsToLocalStorage();
+
+            // Обновляем текстовые поля в редакторе
+            if (document.getElementById('admin-mode').style.display !== 'none') {
+                document.getElementById('her-questions').value = questions.her.join('\n');
+                document.getElementById('his-questions').value = questions.his.join('\n');
+                document.getElementById('common-questions').value = questions.common.join('\n');
+            }
+        }
+
+        // Сохранение всех вопросов в localStorage
+        function saveAllQuestionsToLocalStorage() {
+            localStorage.setItem('herQuestions', JSON.stringify(questions.her));
+            localStorage.setItem('hisQuestions', JSON.stringify(questions.his));
+            localStorage.setItem('commonQuestions', JSON.stringify(questions.common));
+        }
+
+        // Сохранение вопросов определенного типа
+        function saveQuestions(type, text) {
+            questions[type] = text.split('\n').filter(q => q.trim());
+            localStorage.setItem(`${type}Questions`, JSON.stringify(questions[type]));
+            alert('Вопросы сохранены!');
+        }
+
+        // Показать случайный вопрос
+        function showRandomQuestion(type) {
+            const availableQuestions = questions[type];
+
+            if (availableQuestions.length === 0) {
+                questionElement.textContent = `В этом разделе пока нет вопросов`;
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+            questionElement.textContent = availableQuestions[randomIndex];
+            counter++;
+            counterElement.textContent = counter;
+        }
     </script>
 </body>
 </html>
