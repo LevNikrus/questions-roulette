@@ -291,23 +291,26 @@
 
         // Загрузка вопросов из Google Sheets
         async function loadQuestionsFromGoogleSheets() {
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
-
+            const url = 'https://docs.google.com/spreadsheets/d/1wVcvPztE_Wfjw8yhDcTMKvc_35JhPx5Goj0wXvTBhPg/gviz/tq?tqx=out:csv&sheet=Questions';
             const response = await fetch(url);
-            const data = await response.json();
+            const csvText = await response.text();
 
-            if (data.values && data.values.length > 0) {
-                // Предполагаем формат: [ [Её вопросы, Твои вопросы, Общие вопросы], [...] ]
-                questions.her = data.values.map(row => row[0]?.trim()).filter(q => q);
-                questions.his = data.values.map(row => row[1]?.trim()).filter(q => q);
-                questions.common = data.values.map(row => row[2]?.trim()).filter(q => q);
+            const lines = csvText.split('\n').filter(line => line.trim());
+            questions.her = [];
+            questions.his = [];
+            questions.common = [];
 
-                // Сохраняем в localStorage
-                saveAllQuestionsToLocalStorage();
-
-                console.log('Вопросы успешно загружены из Google Sheets');
+            for (let i = 1; i < lines.length; i++) {
+                const [her, his, common] = lines[i].split(',').map(s => s?.trim()?.replace(/^"|"$/g, ''));
+                if (her) questions.her.push(her);
+                if (his) questions.his.push(his);
+                if (common) questions.common.push(common);
             }
+
+            saveAllQuestionsToLocalStorage();
+            console.log('Вопросы загружены из опубликованной Google Таблицы.');
         }
+
 
         // Загрузка вопросов из localStorage
         function loadQuestionsFromLocalStorage() {
