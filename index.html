@@ -424,7 +424,6 @@
             }
         }
 
-        // Парсинг вопросов из таблицы Льва (для Насти и общие вопросы)
         function parseHerQuestions(csvText) {
             const lines = csvText.split('\n').slice(1); // Пропускаем заголовок
 
@@ -432,21 +431,24 @@
             questions.gpt = { easy: [], medium: [], hard: [] };
 
             lines.forEach(line => {
+                // Правильно разбиваем строку CSV с учетом кавычек
                 const columns = line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
 
+                // Удаляем лишние кавычки и пробелы
+                const cleanColumns = columns.map(col => col.trim().replace(/^"|"$/g, ''));
+
                 // Вопросы для Насти (первая колонка)
-                if (columns[0]) {
-                    const question = columns[0].trim().replace(/^"|"$/g, '');
-                    if (question) questions.her.push(question);
+                if (cleanColumns[0]) {
+                    questions.her.push(cleanColumns[0]);
                 }
 
                 // Общие вопросы (вторая колонка) и их уровень сложности (третья колонка)
-                if (columns[1] && columns[1].trim()) {
-                    const question = columns[1].trim().replace(/^"|"$/g, '');
+                if (cleanColumns[1]) {
+                    const question = cleanColumns[1];
                     if (!question) return;
 
                     // Уровень сложности (по умолчанию 1 - легкий)
-                    const level = columns[2] ? columns[2].trim() : '1';
+                    const level = cleanColumns[2] ? cleanColumns[2].trim() : '1';
 
                     // Добавляем вопрос только в соответствующую категорию сложности
                     if (level === '1') {
@@ -472,6 +474,11 @@
             // Удаляем вопросы из medium, если они есть в hard
             questions.gpt.medium = questions.gpt.medium.filter(q =>
                 !questions.gpt.hard.includes(q));
+
+            console.log("Questions for her:", questions.her);
+            console.log("GPT easy questions:", questions.gpt.easy);
+            console.log("GPT medium questions:", questions.gpt.medium);
+            console.log("GPT hard questions:", questions.gpt.hard);
         }
 
         // Парсинг вопросов из таблицы Насти (для Льва)
