@@ -617,29 +617,40 @@
             indicator.className = `turn-indicator ${turnClass}`;
         }
 
-        // Показать случайный вопрос
         function showRandomQuestion() {
             const questionBox = document.getElementById('question');
             questionBox.classList.remove('empty');
 
             // Определяем тип вопросов для текущего хода
-            let questionType, availableQuestions;
+            let questionType, availableQuestions, sourceArray;
             switch (gameState.turn) {
                 case 0:
                     questionType = 'his';
                     availableQuestions = questions.his;
+                    sourceArray = questions.his;
                     break;
                 case 1:
                     questionType = 'her';
                     availableQuestions = questions.her;
+                    sourceArray = questions.her;
                     break;
                 case 2:
                     questionType = 'gpt';
                     // Формируем список доступных вопросов GPT в зависимости от выбранных уровней
                     availableQuestions = [];
-                    if (gameState.gptLevels[0]) availableQuestions = availableQuestions.concat(questions.gpt.easy);
-                    if (gameState.gptLevels[1]) availableQuestions = availableQuestions.concat(questions.gpt.medium);
-                    if (gameState.gptLevels[2]) availableQuestions = availableQuestions.concat(questions.gpt.hard);
+                    sourceArray = [];
+                    if (gameState.gptLevels[0]) {
+                        availableQuestions = availableQuestions.concat(questions.gpt.easy);
+                        sourceArray = sourceArray.concat(questions.gpt.easy);
+                    }
+                    if (gameState.gptLevels[1]) {
+                        availableQuestions = availableQuestions.concat(questions.gpt.medium);
+                        sourceArray = sourceArray.concat(questions.gpt.medium);
+                    }
+                    if (gameState.gptLevels[2]) {
+                        availableQuestions = availableQuestions.concat(questions.gpt.hard);
+                        sourceArray = sourceArray.concat(questions.gpt.hard);
+                    }
                     break;
             }
 
@@ -659,8 +670,20 @@
             const randomIndex = Math.floor(Math.random() * availableQuestions.length);
             const question = availableQuestions[randomIndex];
 
-            // Находим оригинальный индекс вопроса
-            const originalIndex = questions[questionType === 'gpt' ? 'gpt' : questionType].indexOf(question);
+            // Находим оригинальный индекс вопроса в исходном массиве
+            let originalIndex;
+            if (questionType === 'gpt') {
+                // Для GPT вопросов ищем в соответствующем подмассиве
+                if (questions.gpt.easy.includes(question)) {
+                    originalIndex = questions.gpt.easy.indexOf(question);
+                } else if (questions.gpt.medium.includes(question)) {
+                    originalIndex = questions.gpt.medium.indexOf(question);
+                } else {
+                    originalIndex = questions.gpt.hard.indexOf(question);
+                }
+            } else {
+                originalIndex = sourceArray.indexOf(question);
+            }
 
             // Помечаем вопрос как использованный
             if (originalIndex !== -1) {
