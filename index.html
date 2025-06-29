@@ -523,11 +523,16 @@
             const hisQuestionsFinished = usedQuestions.his.size >= questions.his.length;
             const herQuestionsFinished = usedQuestions.her.size >= questions.her.length;
 
-            // Для GPT вопросов учитываем только выбранные уровни сложности
+            // Для GPT вопросов учитываем все доступные вопросы (основные + оставшиеся)
             let gptQuestionsFinished = true;
-            if (gameState.gptLevels[0] && usedQuestions.gpt.size < questions.gpt.easy.length) gptQuestionsFinished = false;
-            if (gameState.gptLevels[1] && usedQuestions.gpt.size < questions.gpt.medium.length) gptQuestionsFinished = false;
-            if (gameState.gptLevels[2] && usedQuestions.gpt.size < questions.gpt.hard.length) gptQuestionsFinished = false;
+            const totalGptAvailable =
+                (gameState.gptLevels[0] ? questions.gpt.easy.length + questions.remaining.gpt.easy.length : 0) +
+                (gameState.gptLevels[1] ? questions.gpt.medium.length + questions.remaining.gpt.medium.length : 0) +
+                (gameState.gptLevels[2] ? questions.gpt.hard.length + questions.remaining.gpt.hard.length : 0);
+
+            if (totalGptAvailable > usedQuestions.gpt.size) {
+                gptQuestionsFinished = false;
+            }
 
             if (hisQuestionsFinished && herQuestionsFinished && gptQuestionsFinished) {
                 endGame();
@@ -602,9 +607,9 @@
 
             // Показываем кнопку продолжения, если есть неиспользованные общие вопросы
             const gptBtn = document.getElementById('continue-gpt-btn');
-            const hasRemainingGpt = questions.remaining.gpt.easy.length > 0 ||
-                questions.remaining.gpt.medium.length > 0 ||
-                questions.remaining.gpt.hard.length > 0;
+            const totalUsedGpt = usedQuestions.gpt.size;
+            const totalGpt = questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length;
+            const hasRemainingGpt = totalGpt > totalUsedGpt;
             gptBtn.classList.toggle('hidden', !hasRemainingGpt);
             // В функции endGame(), после проверки hasRemainingGpt:
             if (hasRemainingGpt) {
@@ -652,22 +657,18 @@
 
         function startGptQuestions() {
             // Добавляем оставшиеся вопросы в соответствующие категории
-            if (gameState.gptLevels[0]) {
+            if (gameState.gptLevels[0] && questions.remaining.gpt.easy.length > 0) {
                 questions.gpt.easy = [...questions.gpt.easy, ...questions.remaining.gpt.easy];
+                questions.remaining.gpt.easy = [];
             }
-            if (gameState.gptLevels[1]) {
+            if (gameState.gptLevels[1] && questions.remaining.gpt.medium.length > 0) {
                 questions.gpt.medium = [...questions.gpt.medium, ...questions.remaining.gpt.medium];
+                questions.remaining.gpt.medium = [];
             }
-            if (gameState.gptLevels[2]) {
+            if (gameState.gptLevels[2] && questions.remaining.gpt.hard.length > 0) {
                 questions.gpt.hard = [...questions.gpt.hard, ...questions.remaining.gpt.hard];
+                questions.remaining.gpt.hard = [];
             }
-
-            // Очищаем оставшиеся вопросы
-            questions.remaining.gpt = {
-                easy: [],
-                medium: [],
-                hard: []
-            };
 
             // Устанавливаем очередь на общие вопросы
             gameState.turn = 2;
