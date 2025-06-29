@@ -359,6 +359,15 @@
         }
 
         // Синхронизация вопросов
+        function updateGptLevels() {
+            gameState.gptLevels = [
+                document.getElementById('gpt-easy').checked,
+                document.getElementById('gpt-medium').checked,
+                document.getElementById('gpt-hard').checked
+            ];
+        }
+
+        // Синхронизация вопросов - ПЕРЕРАБОТАННАЯ ФУНКЦИЯ
         async function syncQuestions() {
             const syncBtn = document.getElementById('sync-btn');
             const syncStatus = document.getElementById('sync-status');
@@ -384,25 +393,42 @@
                     questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length
                 );
 
-                // Сохраняем оставшиеся вопросы (все, что сверх минимального количества)
+                // 1. Сохраняем ВСЕ вопросы в remaining (это будет наш "склад" вопросов)
                 questions.remaining = {
-                    his: questions.his.slice(gameState.minQuestionsCount),
-                    her: questions.her.slice(gameState.minQuestionsCount),
+                    his: [...questions.his],
+                    her: [...questions.her],
                     gpt: {
-                        easy: questions.gpt.easy.slice(gameState.minQuestionsCount),
-                        medium: questions.gpt.medium.slice(gameState.minQuestionsCount),
-                        hard: questions.gpt.hard.slice(gameState.minQuestionsCount)
+                        easy: [...questions.gpt.easy],
+                        medium: [...questions.gpt.medium],
+                        hard: [...questions.gpt.hard]
                     }
                 };
 
-                // Для основной игры берем только минимальное количество вопросов
-                questions.his = questions.his.slice(0, gameState.minQuestionsCount);
-                questions.her = questions.her.slice(0, gameState.minQuestionsCount);
+                // 2. Очищаем основные массивы вопросов
+                questions.his = [];
+                questions.her = [];
+                questions.gpt = { easy: [], medium: [], hard: [] };
 
-                // Для GPT вопросов берем минимальное количество из каждой сложности
-                questions.gpt.easy = questions.gpt.easy.slice(0, gameState.minQuestionsCount);
-                questions.gpt.medium = questions.gpt.medium.slice(0, gameState.minQuestionsCount);
-                questions.gpt.hard = questions.gpt.hard.slice(0, gameState.minQuestionsCount);
+                // 3. Берем минимальное количество вопросов из "склада" для основной игры
+                for (let i = 0; i < gameState.minQuestionsCount; i++) {
+                    if (questions.remaining.his.length > 0) {
+                        questions.his.push(questions.remaining.his.shift());
+                    }
+                    if (questions.remaining.her.length > 0) {
+                        questions.her.push(questions.remaining.her.shift());
+                    }
+
+                    // Для GPT вопросов берем по одному из каждой доступной сложности
+                    if (gameState.gptLevels[0] && questions.remaining.gpt.easy.length > 0) {
+                        questions.gpt.easy.push(questions.remaining.gpt.easy.shift());
+                    }
+                    if (gameState.gptLevels[1] && questions.remaining.gpt.medium.length > 0) {
+                        questions.gpt.medium.push(questions.remaining.gpt.medium.shift());
+                    }
+                    if (gameState.gptLevels[2] && questions.remaining.gpt.hard.length > 0) {
+                        questions.gpt.hard.push(questions.remaining.gpt.hard.shift());
+                    }
+                }
 
                 // Сбрасываем использованные вопросы
                 usedQuestions = {
@@ -411,35 +437,22 @@
                     gpt: new Set()
                 };
 
-                // Подсчитываем общее количество загруженных вопросов
                 const totalQuestions = questions.his.length + questions.her.length +
                     questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length;
 
                 if (totalQuestions > 0) {
                     syncStatus.innerHTML = `<span class="success">✓ Загружено вопросов:
-                    ${questions.his.length} для Льва,
-                    ${questions.her.length} для Насти,
-                    ${questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length} общих</span>
-                    <br>Доступно для продолжения: 
-                    ${questions.remaining.his.length} для Льва,
-                    ${questions.remaining.her.length} для Насти,
-                    ${questions.remaining.gpt.easy.length + questions.remaining.gpt.medium.length + questions.remaining.gpt.hard.length} общих`;
+                        ${questions.his.length} для Льва,
+                        ${questions.her.length} для Насти,
+                        ${questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length} общих</span>
+                        <br>Доступно для продолжения: 
+                        ${questions.remaining.his.length} для Льва,
+                        ${questions.remaining.her.length} для Насти,
+                        ${questions.remaining.gpt.easy.length + questions.remaining.gpt.medium.length + questions.remaining.gpt.hard.length} общих`;
                     startBtn.disabled = false;
                 } else {
                     syncStatus.innerHTML = '<span class="error">✗ Не удалось загрузить вопросы</span>';
                 }
-
-                console.log("Основные вопросы:", {
-                    his: questions.his,
-                    her: questions.her,
-                    gpt: {
-                        easy: questions.gpt.easy,
-                        medium: questions.gpt.medium,
-                        hard: questions.gpt.hard
-                    }
-                });
-
-                console.log("Оставшиеся вопросы:", questions.remaining);
             } catch (error) {
                 console.error('Ошибка загрузки вопросов:', error);
                 syncStatus.innerHTML = '<span class="error">✗ Ошибка загрузки вопросов</span>';
@@ -792,50 +805,37 @@
         }
 
         function startGptQuestions() {
-            // Создаем временный массив для оставшихся GPT вопросов
-            const remainingGptQuestions = [];
+            // 1. Переносим ВСЕ оставшиеся GPT вопросы в основные
+            if (gameState.gptLevels[0]) {
+                questions.gpt.easy = [...questions.gpt.easy, ...questions.remaining.gpt.easy];
+                questions.remaining.gpt.easy = [];
+            }
+            if (gameState.gptLevels[1]) {
+                questions.gpt.medium = [...questions.gpt.medium, ...questions.remaining.gpt.medium];
+                questions.remaining.gpt.medium = [];
+            }
+            if (gameState.gptLevels[2]) {
+                questions.gpt.hard = [...questions.gpt.hard, ...questions.remaining.gpt.hard];
+                questions.remaining.gpt.hard = [];
+            }
 
-            if (gameState.gptLevels[0] && questions.remaining.gpt.easy.length > 0) {
-                remainingGptQuestions.push(...questions.remaining.gpt.easy.map(q => ({ type: 'gpt-easy', text: q })));
-            }
-            if (gameState.gptLevels[1] && questions.remaining.gpt.medium.length > 0) {
-                remainingGptQuestions.push(...questions.remaining.gpt.medium.map(q => ({ type: 'gpt-medium', text: q })));
-            }
-            if (gameState.gptLevels[2] && questions.remaining.gpt.hard.length > 0) {
-                remainingGptQuestions.push(...questions.remaining.gpt.hard.map(q => ({ type: 'gpt-hard', text: q })));
-            }
-
-            if (remainingGptQuestions.length === 0) {
+            // 2. Проверяем, есть ли вопросы для продолжения
+            const totalGptQuestions = questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length;
+            if (totalGptQuestions === 0) {
                 alert('Нет доступных общих вопросов для продолжения');
                 return;
             }
 
-            // Очищаем основные GPT вопросы и добавляем оставшиеся
-            questions.gpt = { easy: [], medium: [], hard: [] };
+            // 3. Устанавливаем режим только GPT вопросов
+            gameState.turn = 2; // Только общие вопросы
+            usedQuestions.gpt = new Set(); // Сбрасываем использованные GPT вопросы
 
-            remainingGptQuestions.forEach(q => {
-                if (q.type === 'gpt-easy') {
-                    questions.gpt.easy.push(q.text);
-                } else if (q.type === 'gpt-medium') {
-                    questions.gpt.medium.push(q.text);
-                } else if (q.type === 'gpt-hard') {
-                    questions.gpt.hard.push(q.text);
-                }
-            });
-
-            // Очищаем оставшиеся GPT вопросы
-            questions.remaining.gpt = { easy: [], medium: [], hard: [] };
-
-            // Устанавливаем очередь на общие вопросы
-            gameState.turn = 2;
-            usedQuestions.gpt = new Set();
-
-            // Переходим на экран игры
+            // 4. Обновляем интерфейс
             document.getElementById('end-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
             updateGameUI();
 
-            // Показываем первый вопрос
+            // 5. Показываем первый вопрос
             const question = getRandomQuestion();
             if (question) {
                 displayQuestion(question);
