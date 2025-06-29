@@ -441,25 +441,35 @@
                 }
 
                 // Общие вопросы (вторая колонка) и их уровень сложности (третья колонка)
-                if (columns[1]) {
+                if (columns[1] && columns[1].trim()) {
                     const question = columns[1].trim().replace(/^"|"$/g, '');
                     if (!question) return;
 
-                    const level = columns[2] ? columns[2].trim() : '1'; // По умолчанию легкий уровень
+                    // Уровень сложности (по умолчанию 1 - легкий)
+                    const level = columns[2] ? columns[2].trim() : '1';
 
+                    // Добавляем вопрос только в соответствующую категорию сложности
                     if (level === '1') {
-                        questions.gpt.easy.push(question);
+                        if (!questions.gpt.easy.includes(question)) {
+                            questions.gpt.easy.push(question);
+                        }
                     } else if (level === '2') {
-                        questions.gpt.medium.push(question);
+                        if (!questions.gpt.medium.includes(question)) {
+                            questions.gpt.medium.push(question);
+                        }
                     } else if (level === '3') {
-                        questions.gpt.hard.push(question);
+                        if (!questions.gpt.hard.includes(question)) {
+                            questions.gpt.hard.push(question);
+                        }
                     }
                 }
             });
 
-            // Удаляем дубликаты (если вопрос был помечен как easy и medium одновременно)
+            // Удаляем вопросы из easy, если они есть в medium или hard
             questions.gpt.easy = questions.gpt.easy.filter(q =>
                 !questions.gpt.medium.includes(q) && !questions.gpt.hard.includes(q));
+
+            // Удаляем вопросы из medium, если они есть в hard
             questions.gpt.medium = questions.gpt.medium.filter(q =>
                 !questions.gpt.hard.includes(q));
         }
