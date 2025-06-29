@@ -519,6 +519,11 @@
 
         // Следующий вопрос
         function nextQuestion() {
+            console.log("Next question called. Current state:");
+            console.log("Used his:", usedQuestions.his.size, "Total his:", questions.his.length);
+            console.log("Used her:", usedQuestions.her.size, "Total her:", questions.her.length);
+            console.log("Used gpt:", usedQuestions.gpt.size, "Total gpt:",
+                questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length);
             // Проверяем, закончились ли все вопросы всех типов
             const hisQuestionsFinished = usedQuestions.his.size >= questions.his.length;
             const herQuestionsFinished = usedQuestions.her.size >= questions.her.length;
@@ -607,10 +612,16 @@
 
             // Показываем кнопку продолжения, если есть неиспользованные общие вопросы
             const gptBtn = document.getElementById('continue-gpt-btn');
-            const totalUsedGpt = usedQuestions.gpt.size;
-            const totalGpt = questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length;
-            const hasRemainingGpt = totalGpt > totalUsedGpt;
+            const remainingGptEasy = questions.remaining.gpt.easy.length;
+            const remainingGptMedium = questions.remaining.gpt.medium.length;
+            const remainingGptHard = questions.remaining.gpt.hard.length;
+            const hasRemainingGpt = remainingGptEasy > 0 || remainingGptMedium > 0 || remainingGptHard > 0;
             gptBtn.classList.toggle('hidden', !hasRemainingGpt);
+
+            if (hasRemainingGpt) {
+                const totalRemainingGpt = remainingGptEasy + remainingGptMedium + remainingGptHard;
+                gptBtn.innerHTML = `<span>Продолжить общие вопросы (${totalRemainingGpt})</span>`;
+            }
             // В функции endGame(), после проверки hasRemainingGpt:
             if (hasRemainingGpt) {
                 const totalRemainingGpt = questions.remaining.gpt.easy.length +
@@ -656,6 +667,11 @@
         }
 
         function startGptQuestions() {
+            console.log("Before adding remaining questions:");
+            console.log("GPT Easy:", questions.gpt.easy.length, "Remaining:", questions.remaining.gpt.easy.length);
+            console.log("GPT Medium:", questions.gpt.medium.length, "Remaining:", questions.remaining.gpt.medium.length);
+            console.log("GPT Hard:", questions.gpt.hard.length, "Remaining:", questions.remaining.gpt.hard.length);
+
             // Добавляем оставшиеся вопросы в соответствующие категории
             if (gameState.gptLevels[0] && questions.remaining.gpt.easy.length > 0) {
                 questions.gpt.easy = [...questions.gpt.easy, ...questions.remaining.gpt.easy];
@@ -669,6 +685,11 @@
                 questions.gpt.hard = [...questions.gpt.hard, ...questions.remaining.gpt.hard];
                 questions.remaining.gpt.hard = [];
             }
+
+            console.log("After adding remaining questions:");
+            console.log("GPT Easy:", questions.gpt.easy.length, "Remaining:", questions.remaining.gpt.easy.length);
+            console.log("GPT Medium:", questions.gpt.medium.length, "Remaining:", questions.remaining.gpt.medium.length);
+            console.log("GPT Hard:", questions.gpt.hard.length, "Remaining:", questions.remaining.gpt.hard.length);
 
             // Устанавливаем очередь на общие вопросы
             gameState.turn = 2;
