@@ -388,11 +388,11 @@
                 questions.remaining = {
                     his: questions.his.slice(gameState.minQuestionsCount),
                     her: questions.her.slice(gameState.minQuestionsCount),
-                    gpt: [
-                        ...questions.gpt.easy.slice(gameState.minQuestionsCount),
-                        ...questions.gpt.medium.slice(gameState.minQuestionsCount),
-                        ...questions.gpt.hard.slice(gameState.minQuestionsCount)
-                    ]
+                    gpt: {
+                        easy: questions.gpt.easy.slice(gameState.minQuestionsCount),
+                        medium: questions.gpt.medium.slice(gameState.minQuestionsCount),
+                        hard: questions.gpt.hard.slice(gameState.minQuestionsCount)
+                    }
                 };
 
                 // Обрезаем вопросы до минимального количества
@@ -566,7 +566,9 @@
             const remainingQuestions = [
                 ...questions.remaining.his.map(q => ({ type: 'his', text: q })),
                 ...questions.remaining.her.map(q => ({ type: 'her', text: q })),
-                ...questions.remaining.gpt.map(q => ({ type: 'gpt', text: q }))
+                ...questions.remaining.gpt.easy.map(q => ({ type: 'gpt-easy', text: q })),
+                ...questions.remaining.gpt.medium.map(q => ({ type: 'gpt-medium', text: q })),
+                ...questions.remaining.gpt.hard.map(q => ({ type: 'gpt-hard', text: q }))
             ];
 
             if (remainingQuestions.length > 0) {
@@ -585,7 +587,9 @@
                     let typeText = '';
                     if (q.type === 'his') typeText = 'Для Льва';
                     else if (q.type === 'her') typeText = 'Для Насти';
-                    else typeText = 'Общий';
+                    else if (q.type === 'gpt-easy') typeText = 'Общий (лёгкий)';
+                    else if (q.type === 'gpt-medium') typeText = 'Общий (средний)';
+                    else typeText = 'Общий (сложный)';
 
                     item.innerHTML = `<strong>${typeText}:</strong> ${q.text}`;
                     list.appendChild(item);
@@ -598,7 +602,9 @@
 
             // Показываем кнопку продолжения, если есть неиспользованные общие вопросы
             const gptBtn = document.getElementById('continue-gpt-btn');
-            const hasRemainingGpt = questions.remaining.gpt.length > 0;
+            const hasRemainingGpt = questions.remaining.gpt.easy.length > 0 ||
+                questions.remaining.gpt.medium.length > 0 ||
+                questions.remaining.gpt.hard.length > 0;
             gptBtn.classList.toggle('hidden', !hasRemainingGpt);
             if (hasRemainingGpt) {
                 gptBtn.addEventListener('click', startGptQuestions);
@@ -641,12 +647,16 @@
         }
 
         function startGptQuestions() {
-            // Добавляем оставшиеся GPT вопросы в основной пул
-            questions.gpt.easy = questions.gpt.easy.concat(questions.remaining.gpt.filter(q =>
-                questions.gpt.easy.includes(q) ||
-                (questions.gpt.medium.includes(q) && gameState.gptLevels[1]) ||
-                (questions.gpt.hard.includes(q) && gameState.gptLevels[2])
-            ));
+            // Добавляем все оставшиеся GPT вопросы в соответствующие категории
+            questions.remaining.gpt.forEach(question => {
+                if (questions.gpt.easy.includes(question) && gameState.gptLevels[0]) {
+                    questions.gpt.easy.push(question);
+                } else if (questions.gpt.medium.includes(question) && gameState.gptLevels[1]) {
+                    questions.gpt.medium.push(question);
+                } else if (questions.gpt.hard.includes(question) && gameState.gptLevels[2]) {
+                    questions.gpt.hard.push(question);
+                }
+            });
 
             // Очищаем оставшиеся вопросы
             questions.remaining.gpt = [];
