@@ -436,25 +436,23 @@
 
                 // Вопросы для Насти (первая колонка)
                 if (columns[0]) {
-                    questions.her.push(columns[0].trim().replace(/^"|"$/g, ''));
+                    const question = columns[0].trim().replace(/^"|"$/g, '');
+                    if (question) questions.her.push(question);
                 }
 
-                // Общие вопросы (вторая колонка)
+                // Общие вопросы (вторая колонка) и их уровень сложности (третья колонка)
                 if (columns[1]) {
-                    questions.gpt.easy.push(columns[1].trim().replace(/^"|"$/g, ''));
-                }
+                    const question = columns[1].trim().replace(/^"|"$/g, '');
+                    if (!question) return;
 
-                // Уровень сложности (третья колонка)
-                if (columns[2]) {
-                    const level = columns[2].trim();
-                    const question = columns[1]?.trim()?.replace(/^"|"$/g, '');
+                    const level = columns[2] ? columns[2].trim() : '1'; // По умолчанию легкий уровень
 
-                    if (question) {
-                        if (level === '2') {
-                            questions.gpt.medium.push(question);
-                        } else if (level === '3') {
-                            questions.gpt.hard.push(question);
-                        }
+                    if (level === '1') {
+                        questions.gpt.easy.push(question);
+                    } else if (level === '2') {
+                        questions.gpt.medium.push(question);
+                    } else if (level === '3') {
+                        questions.gpt.hard.push(question);
                     }
                 }
             });
