@@ -629,17 +629,17 @@
                     questionType = 'gpt';
                     if (gameState.gptLevels[0]) {
                         availableQuestions = availableQuestions.concat(
-                            questions.gpt.easy.filter((q, index) => !usedQuestions.gpt.has(index))
+                            questions.gpt.easy.filter(q => !usedQuestions.gpt.has(q))
                         );
                     }
                     if (gameState.gptLevels[1]) {
                         availableQuestions = availableQuestions.concat(
-                            questions.gpt.medium.filter((q, index) => !usedQuestions.gpt.has(index))
+                            questions.gpt.medium.filter(q => !usedQuestions.gpt.has(q))
                         );
                     }
                     if (gameState.gptLevels[2]) {
                         availableQuestions = availableQuestions.concat(
-                            questions.gpt.hard.filter((q, index) => !usedQuestions.gpt.has(index))
+                            questions.gpt.hard.filter(q => !usedQuestions.gpt.has(q))
                         );
                     }
                     break;
@@ -668,7 +668,7 @@
 
             // Помечаем вопрос как использованный
             if (originalIndex !== -1) {
-                usedQuestions[questionType].add(originalIndex);
+                usedQuestions[questionType].add(question);
             }
 
             return {
@@ -736,9 +736,15 @@
             const remainingQuestions = [
                 ...questions.remaining.his.map(q => ({ type: 'his', text: q })),
                 ...questions.remaining.her.map(q => ({ type: 'her', text: q })),
-                ...questions.remaining.gpt.easy.map(q => ({ type: 'gpt-easy', text: q })),
-                ...questions.remaining.gpt.medium.map(q => ({ type: 'gpt-medium', text: q })),
-                ...questions.remaining.gpt.hard.map(q => ({ type: 'gpt-hard', text: q }))
+                ...questions.remaining.gpt.easy
+                    .filter(q => !usedQuestions.gpt.has(q))
+                    .map(q => ({ type: 'gpt-easy', text: q })),
+                ...questions.remaining.gpt.medium
+                    .filter(q => !usedQuestions.gpt.has(q))
+                    .map(q => ({ type: 'gpt-medium', text: q })),
+                ...questions.remaining.gpt.hard
+                    .filter(q => !usedQuestions.gpt.has(q))
+                    .map(q => ({ type: 'gpt-hard', text: q }))
             ];
 
             const container = document.getElementById('remaining-questions-container');
