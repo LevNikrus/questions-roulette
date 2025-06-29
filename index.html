@@ -606,8 +606,12 @@
                 questions.remaining.gpt.medium.length > 0 ||
                 questions.remaining.gpt.hard.length > 0;
             gptBtn.classList.toggle('hidden', !hasRemainingGpt);
+            // В функции endGame(), после проверки hasRemainingGpt:
             if (hasRemainingGpt) {
-                gptBtn.addEventListener('click', startGptQuestions);
+                const totalRemainingGpt = questions.remaining.gpt.easy.length +
+                    questions.remaining.gpt.medium.length +
+                    questions.remaining.gpt.hard.length;
+                gptBtn.innerHTML = `<span>Продолжить общие вопросы (${totalRemainingGpt})</span>`;
             }
         }
 
@@ -647,19 +651,23 @@
         }
 
         function startGptQuestions() {
-            // Добавляем все оставшиеся GPT вопросы в соответствующие категории
-            questions.remaining.gpt.forEach(question => {
-                if (questions.gpt.easy.includes(question) && gameState.gptLevels[0]) {
-                    questions.gpt.easy.push(question);
-                } else if (questions.gpt.medium.includes(question) && gameState.gptLevels[1]) {
-                    questions.gpt.medium.push(question);
-                } else if (questions.gpt.hard.includes(question) && gameState.gptLevels[2]) {
-                    questions.gpt.hard.push(question);
-                }
-            });
+            // Добавляем оставшиеся вопросы в соответствующие категории
+            if (gameState.gptLevels[0]) {
+                questions.gpt.easy = [...questions.gpt.easy, ...questions.remaining.gpt.easy];
+            }
+            if (gameState.gptLevels[1]) {
+                questions.gpt.medium = [...questions.gpt.medium, ...questions.remaining.gpt.medium];
+            }
+            if (gameState.gptLevels[2]) {
+                questions.gpt.hard = [...questions.gpt.hard, ...questions.remaining.gpt.hard];
+            }
 
             // Очищаем оставшиеся вопросы
-            questions.remaining.gpt = [];
+            questions.remaining.gpt = {
+                easy: [],
+                medium: [],
+                hard: []
+            };
 
             // Устанавливаем очередь на общие вопросы
             gameState.turn = 2;
