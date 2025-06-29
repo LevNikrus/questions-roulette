@@ -8,6 +8,7 @@
         :root {
             --primary-color: #e75480;
             --secondary-color: #ff8e9e;
+            --gpt-color: #10a37f;
             --bg-gradient: linear-gradient(135deg, #fff5f5, #ffecef);
             --card-bg: white;
             --text-color: #333;
@@ -33,11 +34,9 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
-        h1 {
+        h1, h2, h3 {
             color: var(--primary-color);
             text-align: center;
-            font-size: 2.5rem;
-            margin-bottom: 10px;
         }
 
         .subtitle {
@@ -47,27 +46,32 @@
             font-style: italic;
         }
 
-        .mode-selector {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-            gap: 10px;
-        }
-
-        .mode-btn {
-            padding: 12px 24px;
-            background: #f0f0f0;
+        .btn {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: white;
             border: none;
+            padding: 12px 25px;
             border-radius: 50px;
             cursor: pointer;
-            font-weight: 500;
             transition: all 0.3s;
+            font-size: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 10px auto;
         }
 
-            .mode-btn.active {
-                background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-                color: white;
-                box-shadow: 0 4px 10px rgba(231, 84, 128, 0.3);
+            .btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 5px 15px rgba(255,107,139,0.4);
+            }
+
+            .btn:disabled {
+                opacity: 0.7;
+                transform: none !important;
+                box-shadow: none !important;
             }
 
         .question-box {
@@ -90,68 +94,9 @@
                 font-style: italic;
             }
 
-        .btn-group {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin: 25px 0;
-        }
-
-        button {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 1rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-            button:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 5px 15px rgba(255,107,139,0.4);
-            }
-
-            button:disabled {
-                opacity: 0.7;
-                transform: none !important;
-                box-shadow: none !important;
-            }
-
-        .admin-panel {
-            margin-top: 30px;
-            padding: 25px;
-            background: #f9f9f9;
-            border-radius: 15px;
-            display: none;
-        }
-
-        textarea {
-            width: 100%;
-            padding: 15px;
-            margin: 15px 0;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            min-height: 120px;
-            font-family: inherit;
-            font-size: 1rem;
-        }
-
-        .counter {
-            text-align: center;
-            margin-top: 25px;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
         .status {
-            margin-left: 10px;
+            text-align: center;
+            margin: 15px 0;
             font-size: 0.9rem;
         }
 
@@ -183,22 +128,68 @@
             background: #f8f9fa;
             padding: 20px;
             border-radius: 10px;
-            margin-top: 30px;
+            margin: 30px 0;
             border-left: 4px solid var(--primary-color);
         }
-
-            .rules h3 {
-                margin-top: 0;
-                color: var(--primary-color);
-            }
 
             .rules ol {
                 padding-left: 20px;
             }
 
-        .heart {
-            color: var(--primary-color);
-            font-size: 1.2em;
+        .settings-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+            .form-group label {
+                font-weight: 500;
+            }
+
+            .form-group input {
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                font-size: 1rem;
+            }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .turn-indicator {
+            text-align: center;
+            font-size: 1.2rem;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fff9fb;
+        }
+
+        .her-turn {
+            color: #e75480;
+        }
+
+        .his-turn {
+            color: #4285f4;
+        }
+
+        .gpt-turn {
+            color: var(--gpt-color);
+        }
+
+        .hidden {
+            display: none;
         }
 
         @media (max-width: 600px) {
@@ -209,16 +200,6 @@
             h1 {
                 font-size: 2rem;
             }
-
-            .btn-group {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            button {
-                width: 100%;
-                justify-content: center;
-            }
         }
     </style>
 </head>
@@ -227,134 +208,135 @@
         <h1>💞 Вопросы для сближения 💞</h1>
         <p class="subtitle">Откройте друг другу новые грани</p>
 
-        <div class="mode-selector">
-            <button class="mode-btn active" data-mode="play">Играть</button>
-            <button class="mode-btn" data-mode="admin">Редактор</button>
-            <button class="mode-btn" data-mode="rules">Правила</button>
-        </div>
+        <!-- Экран настроек -->
+        <div id="setup-screen">
+            <h2>Настройки игры</h2>
 
-        <div id="play-mode">
-            <div class="question-box empty" id="question">
-                Выберите категорию вопросов
+            <div class="settings-form">
+                <div class="form-group">
+                    <label for="rounds">Количество раундов:</label>
+                    <input type="number" id="rounds" min="1" max="10" value="3">
+                </div>
+
+                <div class="form-group">
+                    <label for="questions-per-round">Вопросов в раунде:</label>
+                    <input type="number" id="questions-per-round" min="1" max="10" value="5">
+                </div>
             </div>
 
-            <div class="btn-group">
-                <button id="btn-her">
-                    <span>Её вопросы</span>
-                    <span class="heart">❤️</span>
-                </button>
-                <button id="btn-his">
-                    <span>Твои вопросы</span>
-                    <span class="heart">💙</span>
-                </button>
-                <button id="btn-common">
-                    <span>Общие вопросы</span>
-                    <span class="heart">💜</span>
-                </button>
-            </div>
+            <button id="sync-btn" class="btn">
+                <span>Синхронизировать вопросы</span>
+            </button>
+            <div id="sync-status" class="status"></div>
 
-            <div class="counter">
-                Задано вопросов: <span id="counter">0</span>
-            </div>
-        </div>
-
-        <div id="admin-mode" class="admin-panel">
-            <h3>Редактирование вопросов</h3>
-            <p>Здесь вы можете управлять своими вопросами. Изменения сохраняются локально.</p>
-
-            <div>
-                <h4>Твои личные вопросы</h4>
-                <textarea id="his-questions" placeholder="Каждый вопрос с новой строки"></textarea>
-                <button id="save-his">
-                    <span>Сохранить мои вопросы</span>
-                </button>
-                <span id="his-status" class="status"></span>
-            </div>
-
-            <div style="margin-top: 30px;">
-                <button id="sync-all">
-                    <span>Синхронизировать все вопросы</span>
-                </button>
-                <span id="sync-status" class="status"></span>
-            </div>
-        </div>
-
-        <div id="rules-mode" class="admin-panel">
             <div class="rules">
                 <h3>🎯 Правила игры</h3>
                 <ol>
-                    <li>Выберите категорию вопросов: её, твои или общие</li>
-                    <li>Нажмите на кнопку категории, чтобы получить случайный вопрос</li>
+                    <li>Игра состоит из раундов, в каждом раунде вы отвечаете на несколько вопросов</li>
+                    <li>Вопросы задаются по очереди: Лев → Настя → ChatGPT → Лев → ...</li>
                     <li>Отвечайте честно и откровенно</li>
                     <li>Обсудите ответы друг друга</li>
-                    <li>Попробуйте ответить на все вопросы из каждой категории</li>
                 </ol>
                 <p><strong>Цель:</strong> Узнать друг друга глубже, выйти за рамки обычных тем для разговоров.</p>
             </div>
+
+            <button id="start-game-btn" class="btn" disabled>
+                <span>Начать игру</span>
+            </button>
+        </div>
+
+        <!-- Экран игры -->
+        <div id="game-screen" class="hidden">
+            <div class="game-info">
+                <div>Раунд: <span id="current-round">1</span>/<span id="total-rounds">3</span></div>
+                <div>Вопрос: <span id="current-question">1</span>/<span id="total-questions">5</span></div>
+            </div>
+
+            <div id="turn-indicator" class="turn-indicator his-turn">
+                Сейчас отвечает: <span id="current-player">Лев</span>
+            </div>
+
+            <div class="question-box empty" id="question">
+                Нажмите "Следующий вопрос", чтобы начать
+            </div>
+
+            <button id="next-question-btn" class="btn">
+                <span>Следующий вопрос</span>
+            </button>
+
+            <button id="end-game-btn" class="btn">
+                <span>Завершить игру</span>
+            </button>
         </div>
     </div>
 
     <script>
         // Конфигурация таблиц
-        const HER_QUESTIONS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS_1_KfnYZ65cMcaAAaBRc321nHTDmt6-NgVq5fM2Sw1eXannMBEJIOYzGxgyT_jA2an7tXSBMSOClP/pub?gid=0&single=true&output=csv';
-        const HIS_QUESTIONS_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQY-pwuIJs4jMtI1YPNGdZRr-0ATB9tJXaRaZ18wBlJ3QyS_5Y0p-tuzVnyR4yyoTpRF-Mtkcfsh6fo/pub?gid=0&single=true&output=csv';
+        const HER_QUESTIONS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS_1_KfnYZ65cMcaAAaBRc321nHTDmt6-NgVq5fM2Sw1eXannMBEJIOYzGxgyT_jA2an7tXSBMSOClP/pub?gid=0&single=true&output=csv';
+        const HIS_QUESTIONS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQY-pwuIJs4jMtI1YPNGdZRr-0ATB9tJXaRaZ18wBlJ3QyS_5Y0p-tuzVnyR4yyoTpRF-Mtkcfsh6fo/pub?gid=0&single=true&output=csv';
 
         // Данные вопросов
         let questions = {
-            her: [],
-            his: [],
-            common: []
+            her: [],    // Вопросы для Насти (из таблицы Льва)
+            his: [],     // Вопросы для Льва (из таблицы Насти)
+            gpt: []      // Общие вопросы от ChatGPT (из таблицы Льва)
+        };
+
+        // Состояние игры
+        let gameState = {
+            rounds: 3,
+            questionsPerRound: 5,
+            currentRound: 1,
+            currentQuestion: 0,
+            turn: 0, // 0 - Лев, 1 - Настя, 2 - ChatGPT
+            loadedQuestions: 0
         };
 
         // Инициализация
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Загрузка вопросов
-            await loadAllQuestions();
-
-            // Настройка интерфейса
-            setupEventListeners();
+        document.addEventListener('DOMContentLoaded', () => {
+            // Настройка обработчиков событий
+            document.getElementById('sync-btn').addEventListener('click', syncQuestions);
+            document.getElementById('start-game-btn').addEventListener('click', startGame);
+            document.getElementById('next-question-btn').addEventListener('click', nextQuestion);
+            document.getElementById('end-game-btn').addEventListener('click', endGame);
         });
 
-        // Загрузка всех вопросов
-        async function loadAllQuestions() {
+        // Синхронизация вопросов
+        async function syncQuestions() {
+            const syncBtn = document.getElementById('sync-btn');
+            const syncStatus = document.getElementById('sync-status');
+            const startBtn = document.getElementById('start-game-btn');
+
+            syncBtn.disabled = true;
+            syncStatus.innerHTML = '<span class="loading"></span> Загрузка вопросов...';
+
             try {
-                await Promise.all([
-                    loadHerQuestions(),
-                    loadHisQuestions()
-                ]);
+                // Загружаем вопросы для Насти и общие вопросы (из таблицы Льва)
+                const herData = await fetchCSV(HER_QUESTIONS_URL);
+                questions.her = parseCSV(herData, 0); // Первая колонка - вопросы для Насти
+                questions.gpt = parseCSV(herData, 1); // Вторая колонка - общие вопросы
 
-                // Загружаем общие вопросы из её таблицы (вторая колонка)
-                const herData = await fetchCSV(HER_QUESTIONS_SHEET_URL);
-                questions.common = parseCSV(herData, 1); // Вторая колонка
+                // Загружаем вопросы для Льва (из таблицы Насти)
+                const hisData = await fetchCSV(HIS_QUESTIONS_URL);
+                questions.his = parseCSV(hisData, 0); // Первая колонка - вопросы для Льва
 
-                // Сохраняем в localStorage
-                saveQuestionsToLocalStorage();
+                gameState.loadedQuestions = questions.her.length + questions.his.length + questions.gpt.length;
 
-                console.log('Все вопросы успешно загружены');
+                if (gameState.loadedQuestions > 0) {
+                    syncStatus.innerHTML = `<span class="success">✓ Загружено:
+                            ${questions.his.length} для Льва,
+                            ${questions.her.length} для Насти,
+                            ${questions.gpt.length} от ChatGPT</span>`;
+                    startBtn.disabled = false;
+                } else {
+                    syncStatus.innerHTML = '<span class="error">✗ Не удалось загрузить вопросы</span>';
+                }
             } catch (error) {
                 console.error('Ошибка загрузки вопросов:', error);
-                loadFromLocalStorage();
+                syncStatus.innerHTML = '<span class="error">✗ Ошибка загрузки вопросов</span>';
+            } finally {
+                syncBtn.disabled = false;
             }
-        }
-
-        // Загрузка её вопросов
-        async function loadHerQuestions() {
-            const data = await fetchCSV(HER_QUESTIONS_SHEET_URL);
-            questions.her = parseCSV(data, 0); // Первая колонка
-        }
-
-        // Загрузка твоих вопросов
-        async function loadHisQuestions() {
-            // Сначала пробуем из localStorage
-            const localHisQuestions = JSON.parse(localStorage.getItem('hisQuestions'));
-            if (localHisQuestions && localHisQuestions.length > 0) {
-                questions.his = localHisQuestions;
-                return;
-            }
-
-            // Если в localStorage нет, загружаем из таблицы
-            const data = await fetchCSV(HIS_QUESTIONS_SHEET_URL);
-            questions.his = parseCSV(data, 0); // Первая колонка
         }
 
         // Загрузка CSV
@@ -369,113 +351,121 @@
             return csvText.split('\n')
                 .slice(1) // Пропускаем заголовок
                 .map(line => {
-                    const columns = line.split(',');
+                    // Учитываем, что вопросы могут содержать запятые
+                    const columns = line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
                     return columns[columnIndex]?.trim()?.replace(/^"|"$/g, '');
                 })
                 .filter(q => q && q.length > 0);
         }
 
-        // Загрузка из localStorage
-        function loadFromLocalStorage() {
-            const savedHisQuestions = JSON.parse(localStorage.getItem('hisQuestions'));
-            if (savedHisQuestions) {
-                questions.his = savedHisQuestions;
+        // Начать игру
+        function startGame() {
+            // Сохраняем настройки
+            gameState.rounds = parseInt(document.getElementById('rounds').value) || 3;
+            gameState.questionsPerRound = parseInt(document.getElementById('questions-per-round').value) || 5;
+            gameState.currentRound = 1;
+            gameState.currentQuestion = 0;
+            gameState.turn = 0; // Начинает Лев
+
+            // Обновляем интерфейс
+            document.getElementById('setup-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            document.getElementById('total-rounds').textContent = gameState.rounds;
+            document.getElementById('total-questions').textContent = gameState.questionsPerRound;
+
+            updateGameUI();
+        }
+
+        // Следующий вопрос
+        function nextQuestion() {
+            gameState.currentQuestion++;
+
+            // Проверяем завершение раунда
+            if (gameState.currentQuestion > gameState.questionsPerRound) {
+                gameState.currentRound++;
+                gameState.currentQuestion = 1;
+
+                // Проверяем завершение игры
+                if (gameState.currentRound > gameState.rounds) {
+                    endGame();
+                    return;
+                }
             }
+
+            // Меняем очередь (0 → 1 → 2 → 0 → ...)
+            gameState.turn = (gameState.turn + 1) % 3;
+
+            updateGameUI();
+            showRandomQuestion();
         }
 
-        // Сохранение в localStorage
-        function saveQuestionsToLocalStorage() {
-            localStorage.setItem('hisQuestions', JSON.stringify(questions.his));
+        // Завершить игру
+        function endGame() {
+            document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('setup-screen').classList.remove('hidden');
+
+            // Сбрасываем статус синхронизации
+            document.getElementById('sync-status').textContent = '';
         }
 
-        // Настройка обработчиков событий
-        function setupEventListeners() {
-            // Переключение режимов
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
+        // Обновить интерфейс игры
+        function updateGameUI() {
+            document.getElementById('current-round').textContent = gameState.currentRound;
+            document.getElementById('current-question').textContent = gameState.currentQuestion;
 
-                    document.getElementById('play-mode').style.display = 'none';
-                    document.getElementById('admin-mode').style.display = 'none';
-                    document.getElementById('rules-mode').style.display = 'none';
+            let playerName, turnClass;
+            switch (gameState.turn) {
+                case 0:
+                    playerName = 'Лев';
+                    turnClass = 'his-turn';
+                    break;
+                case 1:
+                    playerName = 'Настя';
+                    turnClass = 'her-turn';
+                    break;
+                case 2:
+                    playerName = 'ChatGPT';
+                    turnClass = 'gpt-turn';
+                    break;
+            }
 
-                    document.getElementById(`${btn.dataset.mode}-mode`).style.display = 'block';
+            document.getElementById('current-player').textContent = playerName;
 
-                    if (btn.dataset.mode === 'admin') {
-                        document.getElementById('his-questions').value = questions.his.join('\n');
-                    }
-                });
-            });
-
-            // Кнопки вопросов
-            document.getElementById('btn-her').addEventListener('click', () => showRandomQuestion('her'));
-            document.getElementById('btn-his').addEventListener('click', () => showRandomQuestion('his'));
-            document.getElementById('btn-common').addEventListener('click', () => showRandomQuestion('common'));
-
-            // Сохранение вопросов
-            document.getElementById('save-his').addEventListener('click', async () => {
-                const button = document.getElementById('save-his');
-                const status = document.getElementById('his-status');
-
-                button.disabled = true;
-                status.innerHTML = '<span class="loading"></span> Сохранение...';
-
-                try {
-                    questions.his = document.getElementById('his-questions').value
-                        .split('\n')
-                        .map(q => q.trim())
-                        .filter(q => q);
-
-                    saveQuestionsToLocalStorage();
-                    status.innerHTML = '<span class="success">✓ Сохранено</span>';
-                } catch (error) {
-                    console.error(error);
-                    status.innerHTML = '<span class="error">✗ Ошибка</span>';
-                } finally {
-                    setTimeout(() => status.textContent = '', 2000);
-                    button.disabled = false;
-                }
-            });
-
-            // Синхронизация
-            document.getElementById('sync-all').addEventListener('click', async () => {
-                const button = document.getElementById('sync-all');
-                const status = document.getElementById('sync-status');
-
-                button.disabled = true;
-                status.innerHTML = '<span class="loading"></span> Синхронизация...';
-
-                try {
-                    await loadAllQuestions();
-                    status.innerHTML = '<span class="success">✓ Синхронизировано</span>';
-
-                    // Обновляем поле редактора если открыто
-                    if (document.getElementById('admin-mode').style.display === 'block') {
-                        document.getElementById('his-questions').value = questions.his.join('\n');
-                    }
-                } catch (error) {
-                    console.error(error);
-                    status.innerHTML = '<span class="error">✗ Ошибка синхронизации</span>';
-                } finally {
-                    setTimeout(() => status.textContent = '', 2000);
-                    button.disabled = false;
-                }
-            });
+            const indicator = document.getElementById('turn-indicator');
+            indicator.className = `turn-indicator ${turnClass}`;
         }
 
         // Показать случайный вопрос
-        function showRandomQuestion(type) {
+        function showRandomQuestion() {
             const questionBox = document.getElementById('question');
-            const availableQuestions = questions[type];
+            questionBox.classList.remove('empty');
+
+            // Выбираем вопросы в зависимости от очереди
+            let availableQuestions;
+            switch (gameState.turn) {
+                case 0:
+                    availableQuestions = questions.his;
+                    break;
+                case 1:
+                    availableQuestions = questions.her;
+                    break;
+                case 2:
+                    availableQuestions = questions.gpt;
+                    break;
+            }
 
             if (availableQuestions.length === 0) {
-                questionBox.textContent = `В этой категории пока нет вопросов`;
+                let message;
+                switch (gameState.turn) {
+                    case 0: message = 'Нет вопросов для Льва'; break;
+                    case 1: message = 'Нет вопросов для Насти'; break;
+                    case 2: message = 'Нет общих вопросов'; break;
+                }
+                questionBox.textContent = message;
                 questionBox.classList.add('empty');
                 return;
             }
-
-            questionBox.classList.remove('empty');
 
             // Анимация исчезновения
             questionBox.style.opacity = '0';
@@ -484,10 +474,6 @@
                 const randomIndex = Math.floor(Math.random() * availableQuestions.length);
                 questionBox.textContent = availableQuestions[randomIndex];
                 questionBox.style.opacity = '1';
-
-                // Увеличиваем счетчик
-                const counter = document.getElementById('counter');
-                counter.textContent = parseInt(counter.textContent) + 1;
             }, 300);
         }
     </script>
