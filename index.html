@@ -289,6 +289,10 @@
                 <div id="remaining-questions-list"></div>
             </div>
 
+            <button id="continue-gpt-btn" class="btn btn-secondary hidden">
+                <span>Продолжить общие вопросы</span>
+            </button>
+
             <button id="new-game-btn" class="btn">
                 <span>Новая игра</span>
             </button>
@@ -338,6 +342,7 @@
             document.getElementById('next-question-btn').addEventListener('click', nextQuestion);
             document.getElementById('end-game-btn').addEventListener('click', endGame);
             document.getElementById('new-game-btn').addEventListener('click', newGame);
+            document.getElementById('continue-gpt-btn').addEventListener('click', startGptQuestions);
 
             // Настройки сложности GPT
             document.getElementById('gpt-easy').addEventListener('change', updateGptLevels);
@@ -590,6 +595,14 @@
             } else {
                 document.getElementById('remaining-questions-container').classList.add('hidden');
             }
+
+            // Показываем кнопку продолжения, если есть неиспользованные общие вопросы
+            const gptBtn = document.getElementById('continue-gpt-btn');
+            const hasRemainingGpt = questions.remaining.gpt.length > 0;
+            gptBtn.classList.toggle('hidden', !hasRemainingGpt);
+            if (hasRemainingGpt) {
+                gptBtn.addEventListener('click', startGptQuestions);
+            }
         }
 
         // Новая игра
@@ -625,6 +638,30 @@
 
             const indicator = document.getElementById('turn-indicator');
             indicator.className = `turn-indicator ${turnClass}`;
+        }
+
+        function startGptQuestions() {
+            // Добавляем оставшиеся GPT вопросы в основной пул
+            questions.gpt.easy = questions.gpt.easy.concat(questions.remaining.gpt.filter(q =>
+                questions.gpt.easy.includes(q) ||
+                (questions.gpt.medium.includes(q) && gameState.gptLevels[1]) ||
+                (questions.gpt.hard.includes(q) && gameState.gptLevels[2])
+            ));
+
+            // Очищаем оставшиеся вопросы
+            questions.remaining.gpt = [];
+
+            // Устанавливаем очередь на общие вопросы
+            gameState.turn = 2;
+
+            // Сбрасываем использованные GPT вопросы
+            usedQuestions.gpt = new Set();
+
+            // Переходим на экран игры
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            updateGameUI();
+            showRandomQuestion();
         }
 
         function showRandomQuestion() {
