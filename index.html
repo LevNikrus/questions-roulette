@@ -265,6 +265,7 @@
     <script>
         // Конфигурация таблиц
         const HER_QUESTIONS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS_1_KfnYZ65cMcaAAaBRc321nHTDmt6-NgVq5fM2Sw1eXannMBEJIOYzGxgyT_jA2an7tXSBMSOClP/pub?gid=0&single=true&output=csv';
+        const HIS_QUESTIONS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQY-pwuIJs4jMtI1YPNGdZRr-0ATB9tJXaRaZ18wBlJ3QyS_5Y0p-tuzVnyR4yyoTpRF-Mtkcfsh6fo/pub?gid=0&single=true&output=csv';
 
         // Данные вопросов
         let questions = {
@@ -322,9 +323,14 @@
             syncStatus.innerHTML = '<span class="loading"></span> Загрузка вопросов...';
 
             try {
-                // Загружаем вопросы
-                const herData = await fetchCSV(HER_QUESTIONS_URL);
-                parseQuestions(herData);
+                // Загружаем вопросы для Насти и общие вопросы (из таблицы Льва)
+                const [herData, hisData] = await Promise.all([
+                    fetchCSV(HER_QUESTIONS_URL),
+                    fetchCSV(HIS_QUESTIONS_URL)
+                ]);
+
+                parseHerQuestions(herData);
+                parseHisQuestions(hisData);
 
                 // Сбрасываем использованные вопросы
                 usedQuestions = {
@@ -333,9 +339,14 @@
                     gpt: new Set()
                 };
 
-                if (questions.her.length > 0 || questions.his.length > 0 ||
-                    questions.gpt.easy.length > 0 || questions.gpt.medium.length > 0 || questions.gpt.hard.length > 0) {
-                    syncStatus.innerHTML = `<span class="success">✓ Вопросы загружены</span>`;
+                const totalQuestions = questions.her.length + questions.his.length +
+                    questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length;
+
+                if (totalQuestions > 0) {
+                    syncStatus.innerHTML = `<span class="success">✓ Загружено вопросов:
+                            ${questions.his.length} для Льва,
+                            ${questions.her.length} для Насти,
+                            ${questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length} общих</span>`;
                     startBtn.disabled = false;
                 } else {
                     syncStatus.innerHTML = '<span class="error">✗ Не удалось загрузить вопросы</span>';
@@ -348,12 +359,11 @@
             }
         }
 
-        // Парсинг вопросов из CSV
-        function parseQuestions(csvText) {
+        // Парсинг вопросов из таблицы Льва (для Насти и общие вопросы)
+        function parseHerQuestions(csvText) {
             const lines = csvText.split('\n').slice(1); // Пропускаем заголовок
 
             questions.her = [];
-            questions.his = [];
             questions.gpt = { easy: [], medium: [], hard: [] };
 
             lines.forEach(line => {
@@ -389,6 +399,21 @@
                 !questions.gpt.medium.includes(q) && !questions.gpt.hard.includes(q));
             questions.gpt.medium = questions.gpt.medium.filter(q =>
                 !questions.gpt.hard.includes(q));
+        }
+
+        // Парсинг вопросов из таблицы Насти (для Льва)
+        function parseHisQuestions(csvText) {
+            const lines = csvText.split('\n').slice(1); // Пропускаем заголовок
+            questions.his = [];
+
+            lines.forEach(line => {
+                const columns = line.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/);
+
+                // Вопросы для Льва (первая колонка)
+                if (columns[0]) {
+                    questions.his.push(columns[0].trim().replace(/^"|"$/g, ''));
+                }
+            });
         }
 
         // Загрузка CSV
