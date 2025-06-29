@@ -719,7 +719,7 @@
                 gptBtn.innerHTML = `<span>Продолжить общие вопросы (${totalRemainingGpt})</span>`;
             }
 
-            // Показываем оставшиеся вопросы всех типов
+            // Показываем все оставшиеся вопросы
             const remainingQuestions = [
                 ...questions.remaining.his.map(q => ({ type: 'his', text: q })),
                 ...questions.remaining.her.map(q => ({ type: 'her', text: q })),
@@ -792,19 +792,39 @@
         }
 
         function startGptQuestions() {
-            // Добавляем все оставшиеся GPT вопросы в соответствующие категории
-            if (gameState.gptLevels[0]) {
-                questions.gpt.easy = [...questions.gpt.easy, ...questions.remaining.gpt.easy];
-                questions.remaining.gpt.easy = [];
+            // Создаем временный массив для оставшихся GPT вопросов
+            const remainingGptQuestions = [];
+
+            if (gameState.gptLevels[0] && questions.remaining.gpt.easy.length > 0) {
+                remainingGptQuestions.push(...questions.remaining.gpt.easy.map(q => ({ type: 'gpt-easy', text: q })));
             }
-            if (gameState.gptLevels[1]) {
-                questions.gpt.medium = [...questions.gpt.medium, ...questions.remaining.gpt.medium];
-                questions.remaining.gpt.medium = [];
+            if (gameState.gptLevels[1] && questions.remaining.gpt.medium.length > 0) {
+                remainingGptQuestions.push(...questions.remaining.gpt.medium.map(q => ({ type: 'gpt-medium', text: q })));
             }
-            if (gameState.gptLevels[2]) {
-                questions.gpt.hard = [...questions.gpt.hard, ...questions.remaining.gpt.hard];
-                questions.remaining.gpt.hard = [];
+            if (gameState.gptLevels[2] && questions.remaining.gpt.hard.length > 0) {
+                remainingGptQuestions.push(...questions.remaining.gpt.hard.map(q => ({ type: 'gpt-hard', text: q })));
             }
+
+            if (remainingGptQuestions.length === 0) {
+                alert('Нет доступных общих вопросов для продолжения');
+                return;
+            }
+
+            // Очищаем основные GPT вопросы и добавляем оставшиеся
+            questions.gpt = { easy: [], medium: [], hard: [] };
+
+            remainingGptQuestions.forEach(q => {
+                if (q.type === 'gpt-easy') {
+                    questions.gpt.easy.push(q.text);
+                } else if (q.type === 'gpt-medium') {
+                    questions.gpt.medium.push(q.text);
+                } else if (q.type === 'gpt-hard') {
+                    questions.gpt.hard.push(q.text);
+                }
+            });
+
+            // Очищаем оставшиеся GPT вопросы
+            questions.remaining.gpt = { easy: [], medium: [], hard: [] };
 
             // Устанавливаем очередь на общие вопросы
             gameState.turn = 2;
@@ -820,7 +840,6 @@
             if (question) {
                 displayQuestion(question);
             } else {
-                // Если вдруг не нашли вопрос, завершаем игру
                 endGame();
             }
         }
