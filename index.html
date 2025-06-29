@@ -519,48 +519,46 @@
 
         // Следующий вопрос
         function nextQuestion() {
-            console.log("Next question called. Current state:");
-            console.log("Used his:", usedQuestions.his.size, "Total his:", questions.his.length);
-            console.log("Used her:", usedQuestions.her.size, "Total her:", questions.her.length);
-            console.log("Used gpt:", usedQuestions.gpt.size, "Total gpt:",
-                questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length);
             // Проверяем, закончились ли все вопросы всех типов
             const hisQuestionsFinished = usedQuestions.his.size >= questions.his.length;
             const herQuestionsFinished = usedQuestions.her.size >= questions.her.length;
 
-            // Для GPT вопросов учитываем все доступные вопросы (основные + оставшиеся)
+            // Для GPT вопросов учитываем все доступные вопросы
             let gptQuestionsFinished = true;
             const totalGptAvailable =
-                (gameState.gptLevels[0] ? questions.gpt.easy.length + questions.remaining.gpt.easy.length : 0) +
-                (gameState.gptLevels[1] ? questions.gpt.medium.length + questions.remaining.gpt.medium.length : 0) +
-                (gameState.gptLevels[2] ? questions.gpt.hard.length + questions.remaining.gpt.hard.length : 0);
+                (gameState.gptLevels[0] ? questions.gpt.easy.length : 0) +
+                (gameState.gptLevels[1] ? questions.gpt.medium.length : 0) +
+                (gameState.gptLevels[2] ? questions.gpt.hard.length : 0);
 
             if (totalGptAvailable > usedQuestions.gpt.size) {
                 gptQuestionsFinished = false;
             }
 
+            // Если все вопросы закончились - завершаем игру
             if (hisQuestionsFinished && herQuestionsFinished && gptQuestionsFinished) {
                 endGame();
                 return;
             }
 
             // Меняем очередь (0 → 1 → 2 → 0 → ...)
-            let nextTurn = (gameState.turn + 1) % 3;
+            let nextTurn = gameState.turn;
             let attempts = 0;
 
-            // Пропускаем типы вопросов, которые уже закончились
-            while (attempts < 3) {
-                const turnHisFinished = nextTurn === 0 && hisQuestionsFinished;
-                const turnHerFinished = nextTurn === 1 && herQuestionsFinished;
-                const turnGptFinished = nextTurn === 2 && gptQuestionsFinished;
+            // Ищем следующий тип вопроса, который еще не закончился
+            do {
+                nextTurn = (nextTurn + 1) % 3;
+                attempts++;
 
-                if (turnHisFinished || turnHerFinished || turnGptFinished) {
-                    nextTurn = (nextTurn + 1) % 3;
-                    attempts++;
-                } else {
-                    break;
+                if (attempts > 3) {
+                    // Если после 3 попыток не нашли доступный тип - завершаем игру
+                    endGame();
+                    return;
                 }
-            }
+            } while (
+                (nextTurn === 0 && hisQuestionsFinished) ||
+                (nextTurn === 1 && herQuestionsFinished) ||
+                (nextTurn === 2 && gptQuestionsFinished)
+            );
 
             gameState.turn = nextTurn;
             updateGameUI();
@@ -708,7 +706,7 @@
             const questionBox = document.getElementById('question');
             questionBox.classList.remove('empty');
 
-            let questionType, availableQuestions, sourceArray;
+            let questionType, availableQuestions = [];
 
             switch (gameState.turn) {
                 case 0:
@@ -721,7 +719,6 @@
                     break;
                 case 2:
                     questionType = 'gpt';
-                    availableQuestions = [];
                     if (gameState.gptLevels[0]) {
                         availableQuestions = availableQuestions.concat(
                             questions.gpt.easy.filter((q, index) => !usedQuestions.gpt.has(index))
@@ -740,14 +737,16 @@
                     break;
             }
 
+            // Если вопросы закончились - переключаемся на следующий тип
             if (availableQuestions.length === 0) {
-                // Если вопросы закончились, переключаемся на следующий тип
+                console.log(`No more ${questionType} questions available`);
                 nextQuestion();
                 return;
             }
 
             // Выбираем случайный вопрос
-            const question = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+            const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+            const question = availableQuestions[randomIndex];
 
             // Находим оригинальный индекс вопроса
             let originalIndex;
@@ -760,9 +759,7 @@
                     originalIndex = questions.gpt.hard.indexOf(question);
                 }
             } else {
-                originalIndex = questionType === 'his'
-                    ? questions.his.indexOf(question)
-                    : questions.her.indexOf(question);
+                originalIndex = questions[questionType].indexOf(question);
             }
 
             // Помечаем вопрос как использованный
