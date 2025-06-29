@@ -414,9 +414,9 @@
 
                 if (totalQuestions > 0) {
                     syncStatus.innerHTML = `<span class="success">✓ Загружено вопросов:
-                            ${questions.his.length} для Льва,
-                            ${questions.her.length} для Насти,
-                            ${questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length} общих</span>`;
+                                ${questions.his.length} для Льва,
+                                ${questions.her.length} для Насти,
+                                ${questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length} общих</span>`;
                     startBtn.disabled = false;
                 } else {
                     syncStatus.innerHTML = '<span class="error">✗ Не удалось загрузить вопросы</span>';
@@ -517,7 +517,7 @@
             showRandomQuestion();
         }
 
-        // Следующий вопрос
+        // Следующий вопрос - упрощенная версия без рекурсии
         function nextQuestion() {
             // Проверяем, закончились ли все вопросы всех типов
             const hisQuestionsFinished = usedQuestions.his.size >= questions.his.length;
@@ -543,26 +543,139 @@
             // Меняем очередь (0 → 1 → 2 → 0 → ...)
             let nextTurn = gameState.turn;
             let attempts = 0;
+            let foundAvailableTurn = false;
 
             // Ищем следующий тип вопроса, который еще не закончился
             do {
                 nextTurn = (nextTurn + 1) % 3;
                 attempts++;
 
-                if (attempts > 3) {
+                // Проверяем, есть ли вопросы для этого типа
+                if (nextTurn === 0 && !hisQuestionsFinished) {
+                    foundAvailableTurn = true;
+                } else if (nextTurn === 1 && !herQuestionsFinished) {
+                    foundAvailableTurn = true;
+                } else if (nextTurn === 2 && !gptQuestionsFinished) {
+                    foundAvailableTurn = true;
+                }
+
+                if (attempts >= 3) {
                     // Если после 3 попыток не нашли доступный тип - завершаем игру
                     endGame();
                     return;
                 }
-            } while (
-                (nextTurn === 0 && hisQuestionsFinished) ||
-                (nextTurn === 1 && herQuestionsFinished) ||
-                (nextTurn === 2 && gptQuestionsFinished)
-            );
+            } while (!foundAvailableTurn);
 
             gameState.turn = nextTurn;
             updateGameUI();
-            showRandomQuestion();
+
+            // Получаем и отображаем вопрос
+            const question = getRandomQuestion();
+            if (question) {
+                displayQuestion(question);
+            } else {
+                // Если вдруг не нашли вопрос (хотя должны были), завершаем игру
+                endGame();
+            }
+        }
+
+        // Получить случайный вопрос для текущего типа
+        function getRandomQuestion() {
+            let availableQuestions = [];
+            let questionType;
+
+            switch (gameState.turn) {
+                case 0:
+                    questionType = 'his';
+                    availableQuestions = questions.his.filter((q, index) => !usedQuestions.his.has(index));
+                    break;
+                case 1:
+                    questionType = 'her';
+                    availableQuestions = questions.her.filter((q, index) => !usedQuestions.her.has(index));
+                    break;
+                case 2:
+                    questionType = 'gpt';
+                    if (gameState.gptLevels[0]) {
+                        availableQuestions = availableQuestions.concat(
+                            questions.gpt.easy.filter((q, index) => !usedQuestions.gpt.has(index))
+                        );
+                    }
+                    if (gameState.gptLevels[1]) {
+                        availableQuestions = availableQuestions.concat(
+                            questions.gpt.medium.filter((q, index) => !usedQuestions.gpt.has(index))
+                        );
+                    }
+                    if (gameState.gptLevels[2]) {
+                        availableQuestions = availableQuestions.concat(
+                            questions.gpt.hard.filter((q, index) => !usedQuestions.gpt.has(index))
+                        );
+                    }
+                    break;
+            }
+
+            if (availableQuestions.length === 0) {
+                return null;
+            }
+
+            const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+            const question = availableQuestions[randomIndex];
+
+            // Находим оригинальный индекс вопроса
+            let originalIndex;
+            if (questionType === 'gpt') {
+                if (questions.gpt.easy.includes(question)) {
+                    originalIndex = questions.gpt.easy.indexOf(question);
+                } else if (questions.gpt.medium.includes(question)) {
+                    originalIndex = questions.gpt.medium.indexOf(question);
+                } else {
+                    originalIndex = questions.gpt.hard.indexOf(question);
+                }
+            } else {
+                originalIndex = questions[questionType].indexOf(question);
+            }
+
+            // Помечаем вопрос как использованный
+            if (originalIndex !== -1) {
+                usedQuestions[questionType].add(originalIndex);
+            }
+
+            return {
+                text: question,
+                type: questionType
+            };
+        }
+
+        // Отобразить вопрос с анимацией
+        function displayQuestion(question) {
+            const questionBox = document.getElementById('question');
+            questionBox.classList.remove('empty');
+
+            // Анимация вопроса
+            questionBox.style.opacity = '0';
+            setTimeout(() => {
+                questionBox.textContent = question.text;
+                questionBox.style.opacity = '1';
+
+                // Обновляем источник вопроса
+                let sourceText = '';
+                switch (question.type) {
+                    case 'his': sourceText = 'Вопрос для Льва от Насти'; break;
+                    case 'her': sourceText = 'Вопрос для Насти от Льва'; break;
+                    case 'gpt': sourceText = 'Общий вопрос для обоих'; break;
+                }
+                document.getElementById('question-source').textContent = sourceText;
+            }, 300);
+        }
+
+        // Показываем случайный вопрос при старте игры
+        function showRandomQuestion() {
+            const question = getRandomQuestion();
+            if (question) {
+                displayQuestion(question);
+            } else {
+                // Если нет вопросов при старте, переходим к следующему типу
+                nextQuestion();
+            }
         }
 
         // Завершить игру
@@ -618,13 +731,6 @@
 
             if (hasRemainingGpt) {
                 const totalRemainingGpt = remainingGptEasy + remainingGptMedium + remainingGptHard;
-                gptBtn.innerHTML = `<span>Продолжить общие вопросы (${totalRemainingGpt})</span>`;
-            }
-            // В функции endGame(), после проверки hasRemainingGpt:
-            if (hasRemainingGpt) {
-                const totalRemainingGpt = questions.remaining.gpt.easy.length +
-                    questions.remaining.gpt.medium.length +
-                    questions.remaining.gpt.hard.length;
                 gptBtn.innerHTML = `<span>Продолжить общие вопросы (${totalRemainingGpt})</span>`;
             }
         }
@@ -700,79 +806,6 @@
             document.getElementById('game-screen').classList.remove('hidden');
             updateGameUI();
             showRandomQuestion();
-        }
-
-        function showRandomQuestion() {
-            const questionBox = document.getElementById('question');
-            questionBox.classList.remove('empty');
-
-            let questionType, availableQuestions = [];
-
-            switch (gameState.turn) {
-                case 0:
-                    questionType = 'his';
-                    availableQuestions = questions.his.filter((q, index) => !usedQuestions.his.has(index));
-                    break;
-                case 1:
-                    questionType = 'her';
-                    availableQuestions = questions.her.filter((q, index) => !usedQuestions.her.has(index));
-                    break;
-                case 2:
-                    questionType = 'gpt';
-                    if (gameState.gptLevels[0]) {
-                        availableQuestions = availableQuestions.concat(
-                            questions.gpt.easy.filter((q, index) => !usedQuestions.gpt.has(index))
-                        );
-                    }
-                    if (gameState.gptLevels[1]) {
-                        availableQuestions = availableQuestions.concat(
-                            questions.gpt.medium.filter((q, index) => !usedQuestions.gpt.has(index))
-                        );
-                    }
-                    if (gameState.gptLevels[2]) {
-                        availableQuestions = availableQuestions.concat(
-                            questions.gpt.hard.filter((q, index) => !usedQuestions.gpt.has(index))
-                        );
-                    }
-                    break;
-            }
-
-            // Если вопросы закончились - переключаемся на следующий тип
-            if (availableQuestions.length === 0) {
-                console.log(`No more ${questionType} questions available`);
-                nextQuestion();
-                return;
-            }
-
-            // Выбираем случайный вопрос
-            const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-            const question = availableQuestions[randomIndex];
-
-            // Находим оригинальный индекс вопроса
-            let originalIndex;
-            if (questionType === 'gpt') {
-                if (questions.gpt.easy.includes(question)) {
-                    originalIndex = questions.gpt.easy.indexOf(question);
-                } else if (questions.gpt.medium.includes(question)) {
-                    originalIndex = questions.gpt.medium.indexOf(question);
-                } else {
-                    originalIndex = questions.gpt.hard.indexOf(question);
-                }
-            } else {
-                originalIndex = questions[questionType].indexOf(question);
-            }
-
-            // Помечаем вопрос как использованный
-            if (originalIndex !== -1) {
-                usedQuestions[questionType].add(originalIndex);
-            }
-
-            // Анимация вопроса
-            questionBox.style.opacity = '0';
-            setTimeout(() => {
-                questionBox.textContent = question;
-                questionBox.style.opacity = '1';
-            }, 300);
         }
     </script>
 </body>
