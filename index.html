@@ -87,6 +87,9 @@
             align-items: center;
             justify-content: center;
             transition: all 0.3s;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: pre-line;
         }
 
             .question-box.empty {
@@ -192,6 +195,13 @@
             display: none;
         }
 
+        .question-source {
+            font-size: 1rem;
+            margin-top: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -199,6 +209,11 @@
 
             h1 {
                 font-size: 2rem;
+            }
+
+            .question-box {
+                font-size: 1.1rem;
+                padding: 15px;
             }
         }
     </style>
@@ -233,7 +248,7 @@
                 <h3>🎯 Правила игры</h3>
                 <ol>
                     <li>Игра состоит из раундов, в каждом раунде вы отвечаете на несколько вопросов</li>
-                    <li>Вопросы задаются по очереди: Лев → Настя → ChatGPT → Лев → ...</li>
+                    <li>Вопросы задаются по очереди: Лев → Настя → Общий вопрос → Лев → ...</li>
                     <li>Отвечайте честно и откровенно</li>
                     <li>Обсудите ответы друг друга</li>
                 </ol>
@@ -259,6 +274,7 @@
             <div class="question-box empty" id="question">
                 Нажмите "Следующий вопрос", чтобы начать
             </div>
+            <div id="question-source" class="question-source"></div>
 
             <button id="next-question-btn" class="btn">
                 <span>Следующий вопрос</span>
@@ -279,7 +295,14 @@
         let questions = {
             her: [],    // Вопросы для Насти (из таблицы Льва)
             his: [],     // Вопросы для Льва (из таблицы Насти)
-            gpt: []      // Общие вопросы от ChatGPT (из таблицы Льва)
+            gpt: []      // Общие вопросы (из таблицы Льва)
+        };
+
+        // Для отслеживания использованных вопросов
+        let usedQuestions = {
+            her: new Set(),
+            his: new Set(),
+            gpt: new Set()
         };
 
         // Состояние игры
@@ -288,7 +311,7 @@
             questionsPerRound: 5,
             currentRound: 1,
             currentQuestion: 0,
-            turn: 0, // 0 - Лев, 1 - Настя, 2 - ChatGPT
+            turn: 0, // 0 - Лев, 1 - Настя, 2 - Общий
             loadedQuestions: 0
         };
 
@@ -320,13 +343,20 @@
                 const hisData = await fetchCSV(HIS_QUESTIONS_URL);
                 questions.his = parseCSV(hisData, 0); // Первая колонка - вопросы для Льва
 
+                // Сбрасываем использованные вопросы
+                usedQuestions = {
+                    her: new Set(),
+                    his: new Set(),
+                    gpt: new Set()
+                };
+
                 gameState.loadedQuestions = questions.her.length + questions.his.length + questions.gpt.length;
 
                 if (gameState.loadedQuestions > 0) {
                     syncStatus.innerHTML = `<span class="success">✓ Загружено:
                             ${questions.his.length} для Льва,
                             ${questions.her.length} для Насти,
-                            ${questions.gpt.length} от ChatGPT</span>`;
+                            ${questions.gpt.length} общих</span>`;
                     startBtn.disabled = false;
                 } else {
                     syncStatus.innerHTML = '<span class="error">✗ Не удалось загрузить вопросы</span>';
@@ -414,23 +444,27 @@
             document.getElementById('current-round').textContent = gameState.currentRound;
             document.getElementById('current-question').textContent = gameState.currentQuestion;
 
-            let playerName, turnClass;
+            let playerName, turnClass, sourceText;
             switch (gameState.turn) {
                 case 0:
                     playerName = 'Лев';
                     turnClass = 'his-turn';
+                    sourceText = 'Вопрос для Льва от Насти';
                     break;
                 case 1:
                     playerName = 'Настя';
                     turnClass = 'her-turn';
+                    sourceText = 'Вопрос для Насти от Льва';
                     break;
                 case 2:
-                    playerName = 'ChatGPT';
+                    playerName = 'Оба';
                     turnClass = 'gpt-turn';
+                    sourceText = 'Общий вопрос для обоих';
                     break;
             }
 
             document.getElementById('current-player').textContent = playerName;
+            document.getElementById('question-source').textContent = sourceText;
 
             const indicator = document.getElementById('turn-indicator');
             indicator.className = `turn-indicator ${turnClass}`;
@@ -441,38 +475,51 @@
             const questionBox = document.getElementById('question');
             questionBox.classList.remove('empty');
 
-            // Выбираем вопросы в зависимости от очереди
-            let availableQuestions;
+            // Определяем тип вопросов для текущего хода
+            let questionType, availableQuestions;
             switch (gameState.turn) {
                 case 0:
+                    questionType = 'his';
                     availableQuestions = questions.his;
                     break;
                 case 1:
+                    questionType = 'her';
                     availableQuestions = questions.her;
                     break;
                 case 2:
+                    questionType = 'gpt';
                     availableQuestions = questions.gpt;
                     break;
             }
 
-            if (availableQuestions.length === 0) {
+            // Проверяем, есть ли неиспользованные вопросы
+            if (usedQuestions[questionType].size >= availableQuestions.length) {
                 let message;
                 switch (gameState.turn) {
-                    case 0: message = 'Нет вопросов для Льва'; break;
-                    case 1: message = 'Нет вопросов для Насти'; break;
-                    case 2: message = 'Нет общих вопросов'; break;
+                    case 0: message = 'Все вопросы для Льва использованы'; break;
+                    case 1: message = 'Все вопросы для Насти использованы'; break;
+                    case 2: message = 'Все общие вопросы использованы'; break;
                 }
                 questionBox.textContent = message;
                 questionBox.classList.add('empty');
                 return;
             }
 
+            // Выбираем случайный неиспользованный вопрос
+            let randomIndex, question;
+            do {
+                randomIndex = Math.floor(Math.random() * availableQuestions.length);
+                question = availableQuestions[randomIndex];
+            } while (usedQuestions[questionType].has(randomIndex));
+
+            // Помечаем вопрос как использованный
+            usedQuestions[questionType].add(randomIndex);
+
             // Анимация исчезновения
             questionBox.style.opacity = '0';
 
             setTimeout(() => {
-                const randomIndex = Math.floor(Math.random() * availableQuestions.length);
-                questionBox.textContent = availableQuestions[randomIndex];
+                questionBox.textContent = question;
                 questionBox.style.opacity = '1';
             }, 300);
         }
