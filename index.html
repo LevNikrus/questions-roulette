@@ -188,6 +188,24 @@
             display: none;
         }
 
+        .remaining-questions {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+            .remaining-questions h4 {
+                margin-top: 0;
+                color: var(--primary-color);
+            }
+
+            .remaining-questions ul {
+                padding-left: 20px;
+            }
+
         @media (max-width: 600px) {
             .container {
                 padding: 20px;
@@ -260,6 +278,21 @@
                 <span>Завершить игру</span>
             </button>
         </div>
+
+        <!-- Экран завершения -->
+        <div id="end-screen" class="hidden">
+            <h2>Игра завершена!</h2>
+            <p>Вы ответили на все вопросы из основной подборки.</p>
+
+            <div id="remaining-questions-container" class="remaining-questions hidden">
+                <h4>Оставшиеся вопросы:</h4>
+                <div id="remaining-questions-list"></div>
+            </div>
+
+            <button id="new-game-btn" class="btn">
+                <span>Новая игра</span>
+            </button>
+        </div>
     </div>
 
     <script>
@@ -275,6 +308,11 @@
                 easy: [],
                 medium: [],
                 hard: []
+            },
+            remaining: {
+                her: [],
+                his: [],
+                gpt: []
             }
         };
 
@@ -288,7 +326,8 @@
         // Состояние игры
         let gameState = {
             turn: 0, // 0 - Лев, 1 - Настя, 2 - Общий
-            gptLevels: [true, true, false] // Легкие, средние, сложные
+            gptLevels: [true, true, false], // Легкие, средние, сложные
+            minQuestionsCount: 0
         };
 
         // Инициализация
@@ -298,6 +337,7 @@
             document.getElementById('start-game-btn').addEventListener('click', startGame);
             document.getElementById('next-question-btn').addEventListener('click', nextQuestion);
             document.getElementById('end-game-btn').addEventListener('click', endGame);
+            document.getElementById('new-game-btn').addEventListener('click', newGame);
 
             // Настройки сложности GPT
             document.getElementById('gpt-easy').addEventListener('change', updateGptLevels);
@@ -332,6 +372,31 @@
                 parseHerQuestions(herData);
                 parseHisQuestions(hisData);
 
+                // Определяем минимальное количество вопросов
+                gameState.minQuestionsCount = Math.min(
+                    questions.his.length,
+                    questions.her.length,
+                    questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length
+                );
+
+                // Сохраняем оставшиеся вопросы
+                questions.remaining = {
+                    his: questions.his.slice(gameState.minQuestionsCount),
+                    her: questions.her.slice(gameState.minQuestionsCount),
+                    gpt: [
+                        ...questions.gpt.easy.slice(gameState.minQuestionsCount),
+                        ...questions.gpt.medium.slice(gameState.minQuestionsCount),
+                        ...questions.gpt.hard.slice(gameState.minQuestionsCount)
+                    ]
+                };
+
+                // Обрезаем вопросы до минимального количества
+                questions.his = questions.his.slice(0, gameState.minQuestionsCount);
+                questions.her = questions.her.slice(0, gameState.minQuestionsCount);
+                questions.gpt.easy = questions.gpt.easy.slice(0, gameState.minQuestionsCount);
+                questions.gpt.medium = questions.gpt.medium.slice(0, gameState.minQuestionsCount);
+                questions.gpt.hard = questions.gpt.hard.slice(0, gameState.minQuestionsCount);
+
                 // Сбрасываем использованные вопросы
                 usedQuestions = {
                     her: new Set(),
@@ -339,7 +404,7 @@
                     gpt: new Set()
                 };
 
-                const totalQuestions = questions.her.length + questions.his.length +
+                const totalQuestions = questions.his.length + questions.her.length +
                     questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length;
 
                 if (totalQuestions > 0) {
@@ -427,14 +492,37 @@
         function startGame() {
             document.getElementById('setup-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
             updateGameUI();
             showRandomQuestion();
         }
 
         // Следующий вопрос
         function nextQuestion() {
+            // Проверяем, закончились ли вопросы
+            if (usedQuestions.his.size >= questions.his.length &&
+                usedQuestions.her.size >= questions.her.length &&
+                usedQuestions.gpt.size >= (questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length)) {
+                endGame();
+                return;
+            }
+
             // Меняем очередь (0 → 1 → 2 → 0 → ...)
             gameState.turn = (gameState.turn + 1) % 3;
+
+            // Пропускаем типы вопросов, которые уже закончились
+            let attempts = 0;
+            while (attempts < 3) {
+                if ((gameState.turn === 0 && usedQuestions.his.size >= questions.his.length) ||
+                    (gameState.turn === 1 && usedQuestions.her.size >= questions.her.length) ||
+                    (gameState.turn === 2 && usedQuestions.gpt.size >= (questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length))) {
+                    gameState.turn = (gameState.turn + 1) % 3;
+                    attempts++;
+                } else {
+                    break;
+                }
+            }
+
             updateGameUI();
             showRandomQuestion();
         }
@@ -442,6 +530,46 @@
         // Завершить игру
         function endGame() {
             document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+
+            // Показываем оставшиеся вопросы, если они есть
+            const remainingQuestions = [
+                ...questions.remaining.his.map(q => ({ type: 'his', text: q })),
+                ...questions.remaining.her.map(q => ({ type: 'her', text: q })),
+                ...questions.remaining.gpt.map(q => ({ type: 'gpt', text: q }))
+            ];
+
+            if (remainingQuestions.length > 0) {
+                const container = document.getElementById('remaining-questions-container');
+                const list = document.getElementById('remaining-questions-list');
+
+                list.innerHTML = '';
+
+                remainingQuestions.forEach((q, index) => {
+                    const item = document.createElement('div');
+                    item.style.marginBottom = '10px';
+                    item.style.padding = '8px';
+                    item.style.backgroundColor = index % 2 === 0 ? '#f8f9fa' : 'white';
+                    item.style.borderRadius = '4px';
+
+                    let typeText = '';
+                    if (q.type === 'his') typeText = 'Для Льва';
+                    else if (q.type === 'her') typeText = 'Для Насти';
+                    else typeText = 'Общий';
+
+                    item.innerHTML = `<strong>${typeText}:</strong> ${q.text}`;
+                    list.appendChild(item);
+                });
+
+                container.classList.remove('hidden');
+            } else {
+                document.getElementById('remaining-questions-container').classList.add('hidden');
+            }
+        }
+
+        // Новая игра
+        function newGame() {
+            document.getElementById('end-screen').classList.add('hidden');
             document.getElementById('setup-screen').classList.remove('hidden');
             document.getElementById('sync-status').textContent = '';
         }
@@ -500,22 +628,29 @@
                     break;
             }
 
+            // Фильтруем вопросы, оставляя только неиспользованные
+            availableQuestions = availableQuestions.filter((q, index) => {
+                return !usedQuestions[questionType].has(index);
+            });
+
             // Проверяем, есть ли вопросы
             if (availableQuestions.length === 0) {
-                let message;
-                switch (gameState.turn) {
-                    case 0: message = 'Нет доступных вопросов для Льва'; break;
-                    case 1: message = 'Нет доступных вопросов для Насти'; break;
-                    case 2: message = 'Нет доступных общих вопросов'; break;
-                }
-                questionBox.textContent = message;
-                questionBox.classList.add('empty');
+                // Пытаемся переключиться на другой тип вопросов
+                nextQuestion();
                 return;
             }
 
-            // Выбираем случайный вопрос
+            // Выбираем случайный вопрос из доступных
             const randomIndex = Math.floor(Math.random() * availableQuestions.length);
             const question = availableQuestions[randomIndex];
+
+            // Находим оригинальный индекс вопроса
+            const originalIndex = questions[questionType === 'gpt' ? 'gpt' : questionType].indexOf(question);
+
+            // Помечаем вопрос как использованный
+            if (originalIndex !== -1) {
+                usedQuestions[questionType].add(originalIndex);
+            }
 
             // Анимация исчезновения
             questionBox.style.opacity = '0';
