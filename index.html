@@ -78,6 +78,26 @@
             border: 1px solid var(--primary-color);
         }
 
+        .btn-gpt {
+            background: var(--gpt-color);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
         .question-box {
             min-height: 200px;
             padding: 25px;
@@ -289,7 +309,7 @@
                 <div id="remaining-questions-list"></div>
             </div>
 
-            <button id="continue-gpt-btn" class="btn btn-secondary hidden">
+            <button id="continue-gpt-btn" class="btn btn-gpt hidden">
                 <span>Продолжить общие вопросы</span>
             </button>
 
@@ -316,7 +336,11 @@
             remaining: {
                 her: [],
                 his: [],
-                gpt: []
+                gpt: {
+                    easy: [],
+                    medium: [],
+                    hard: []
+                }
             }
         };
 
@@ -359,15 +383,6 @@
         }
 
         // Синхронизация вопросов
-        function updateGptLevels() {
-            gameState.gptLevels = [
-                document.getElementById('gpt-easy').checked,
-                document.getElementById('gpt-medium').checked,
-                document.getElementById('gpt-hard').checked
-            ];
-        }
-
-        // Синхронизация вопросов - ПЕРЕРАБОТАННАЯ ФУНКЦИЯ
         async function syncQuestions() {
             const syncBtn = document.getElementById('sync-btn');
             const syncStatus = document.getElementById('sync-status');
@@ -377,6 +392,10 @@
             syncStatus.innerHTML = '<span class="loading"></span> Загрузка вопросов...';
 
             try {
+                // Инициализация массивов GPT вопросов перед загрузкой
+                questions.gpt = { easy: [], medium: [], hard: [] };
+                questions.remaining.gpt = { easy: [], medium: [], hard: [] };
+
                 // Загружаем вопросы для Насти и общие вопросы (из таблицы Льва)
                 const [herData, hisData] = await Promise.all([
                     fetchCSV(HER_QUESTIONS_URL),
@@ -385,6 +404,9 @@
 
                 parseHerQuestions(herData);
                 parseHisQuestions(hisData);
+
+                // Удаляем дубликаты в GPT вопросах
+                removeDuplicateGptQuestions();
 
                 // Определяем минимальное количество вопросов
                 gameState.minQuestionsCount = Math.min(
@@ -442,13 +464,13 @@
 
                 if (totalQuestions > 0) {
                     syncStatus.innerHTML = `<span class="success">✓ Загружено вопросов:
-                        ${questions.his.length} для Льва,
-                        ${questions.her.length} для Насти,
-                        ${questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length} общих</span>
-                        <br>Доступно для продолжения: 
-                        ${questions.remaining.his.length} для Льва,
-                        ${questions.remaining.her.length} для Насти,
-                        ${questions.remaining.gpt.easy.length + questions.remaining.gpt.medium.length + questions.remaining.gpt.hard.length} общих`;
+                            ${questions.his.length} для Льва,
+                            ${questions.her.length} для Насти,
+                            ${questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length} общих</span>
+                            <br>Доступно для продолжения:
+                            ${questions.remaining.his.length} для Льва,
+                            ${questions.remaining.her.length} для Насти,
+                            ${questions.remaining.gpt.easy.length + questions.remaining.gpt.medium.length + questions.remaining.gpt.hard.length} общих`;
                     startBtn.disabled = false;
                 } else {
                     syncStatus.innerHTML = '<span class="error">✗ Не удалось загрузить вопросы</span>';
@@ -461,11 +483,30 @@
             }
         }
 
+        // Удаление дубликатов в GPT вопросах
+        function removeDuplicateGptQuestions() {
+            // Собираем все вопросы в один массив для проверки
+            const allGptQuestions = [
+                ...questions.gpt.easy,
+                ...questions.gpt.medium,
+                ...questions.gpt.hard
+            ];
+
+            // Фильтруем дубликаты
+            questions.gpt.easy = questions.gpt.easy.filter((q, i, arr) =>
+                arr.indexOf(q) === i && !questions.gpt.medium.includes(q) && !questions.gpt.hard.includes(q));
+
+            questions.gpt.medium = questions.gpt.medium.filter((q, i, arr) =>
+                arr.indexOf(q) === i && !questions.gpt.hard.includes(q));
+
+            questions.gpt.hard = questions.gpt.hard.filter((q, i, arr) =>
+                arr.indexOf(q) === i);
+        }
+
         function parseHerQuestions(csvText) {
             const lines = csvText.split('\n').slice(1); // Пропускаем заголовок
 
             questions.her = [];
-            questions.gpt = { easy: [], medium: [], hard: [] };
 
             lines.forEach(line => {
                 // Правильно разбиваем строку CSV с учетом кавычек
@@ -503,14 +544,6 @@
                     }
                 }
             });
-
-            // Удаляем вопросы из easy, если они есть в medium или hard
-            questions.gpt.easy = questions.gpt.easy.filter(q =>
-                !questions.gpt.medium.includes(q) && !questions.gpt.hard.includes(q));
-
-            // Удаляем вопросы из medium, если они есть в hard
-            questions.gpt.medium = questions.gpt.medium.filter(q =>
-                !questions.gpt.hard.includes(q));
 
             console.log("Questions for her:", questions.her);
             console.log("GPT easy questions:", questions.gpt.easy);
@@ -668,7 +701,11 @@
 
             // Помечаем вопрос как использованный
             if (originalIndex !== -1) {
-                usedQuestions[questionType].add(question);
+                if (questionType === 'gpt') {
+                    usedQuestions[questionType].add(question);
+                } else {
+                    usedQuestions[questionType].add(originalIndex);
+                }
             }
 
             return {
