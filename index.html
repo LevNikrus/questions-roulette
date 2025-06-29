@@ -310,7 +310,7 @@
             </div>
 
             <button id="continue-gpt-btn" class="btn btn-gpt hidden">
-                <span>Продолжить общие вопросы</span>
+                <span>Остались общие вопросы (0)</span>
             </button>
 
             <button id="new-game-btn" class="btn">
@@ -464,13 +464,13 @@
 
                 if (totalQuestions > 0) {
                     syncStatus.innerHTML = `<span class="success">✓ Загружено вопросов:
-                            ${questions.his.length} для Льва,
-                            ${questions.her.length} для Насти,
-                            ${questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length} общих</span>
-                            <br>Доступно для продолжения:
-                            ${questions.remaining.his.length} для Льва,
-                            ${questions.remaining.her.length} для Насти,
-                            ${questions.remaining.gpt.easy.length + questions.remaining.gpt.medium.length + questions.remaining.gpt.hard.length} общих`;
+                                ${questions.his.length} для Льва,
+                                ${questions.her.length} для Насти,
+                                ${questions.gpt.easy.length + questions.gpt.medium.length + questions.gpt.hard.length} общих</span>
+                                <br>Доступно для продолжения:
+                                ${questions.remaining.his.length} для Льва,
+                                ${questions.remaining.her.length} для Насти,
+                                ${questions.remaining.gpt.easy.length + questions.remaining.gpt.medium.length + questions.remaining.gpt.hard.length} общих`;
                     startBtn.disabled = false;
                 } else {
                     syncStatus.innerHTML = '<span class="error">✗ Не удалось загрузить вопросы</span>';
@@ -597,6 +597,25 @@
 
             if (totalGptAvailable > usedQuestions.gpt.size) {
                 gptQuestionsFinished = false;
+            }
+
+            // Если парные вопросы закончились, но общие ещё остались — показать кнопку
+            if (hisQuestionsFinished && herQuestionsFinished && !gptQuestionsFinished) {
+                // Показать кнопку "Продолжить общие вопросы"
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('end-screen').classList.remove('hidden');
+
+                const gptBtn = document.getElementById('continue-gpt-btn');
+                gptBtn.classList.remove('hidden');
+
+                const totalRemainingGpt =
+                    questions.remaining.gpt.easy.length +
+                    questions.remaining.gpt.medium.length +
+                    questions.remaining.gpt.hard.length;
+
+                gptBtn.innerHTML = `<span>Вопросы друг другу закончились. Остались общие (${totalRemainingGpt}) — продолжить</span>`;
+
+                return; // Остановим выполнение
             }
 
             // Если все вопросы закончились - завершаем игру
@@ -766,7 +785,7 @@
                     questions.remaining.gpt.easy.length +
                     questions.remaining.gpt.medium.length +
                     questions.remaining.gpt.hard.length;
-                gptBtn.innerHTML = `<span>Продолжить общие вопросы (${totalRemainingGpt})</span>`;
+                gptBtn.innerHTML = `<span>Остались общие вопросы (${totalRemainingGpt})</span>`;
             }
 
             // Показываем все оставшиеся вопросы
@@ -880,11 +899,13 @@
 
             // 5. Показываем первый вопрос
             const question = getRandomQuestion();
-            if (question) {
-                displayQuestion(question);
-            } else {
+            if (!question) {
+                alert("Все общие вопросы уже использованы.");
                 endGame();
+                return;
             }
+
+            displayQuestion(question);
         }
     </script>
 </body>
