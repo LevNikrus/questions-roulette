@@ -819,11 +819,18 @@
 
                 // Обновляем источник вопроса
                 let sourceText = '';
-                switch (question.type) {
-                    case 'his': sourceText = 'Вопрос для Льва от Насти'; break;
-                    case 'her': sourceText = 'Вопрос для Насти от Льва'; break;
-                    case 'gpt': sourceText = 'Общий вопрос для обоих'; break;
+                if (question.type === 'his') {
+                    sourceText = 'Вопрос для Льва от Насти';
+                } else if (question.type === 'her') {
+                    sourceText = 'Вопрос для Насти от Льва';
+                } else if (question.type === 'gpt') {
+                    let level = '';
+                    if (questions.gpt.easy.includes(question.text)) level = ' (Лёгкий)';
+                    else if (questions.gpt.medium.includes(question.text)) level = ' (Средний)';
+                    else if (questions.gpt.hard.includes(question.text)) level = ' (Сложный)';
+                    sourceText = `Общий вопрос для обоих${level}`;
                 }
+
                 document.getElementById('question-source').textContent = sourceText;
             }, 300);
         }
